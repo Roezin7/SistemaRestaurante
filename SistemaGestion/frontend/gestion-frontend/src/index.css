@@ -1,0 +1,55 @@
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  margin: 20px auto;
+  max-width: 1200px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2, h3, h4 {
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.btn {
+  margin: 5px;
+  border-radius: 20px;
+}
+
+.table-striped th, .table-striped td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.table-striped th {
+  background-color: #007bff;
+  color: white;
+}
+
+.table-striped tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.input-group {
+  margin-bottom: 10px;
+}
+
+input[type="text"], input[type="number"], input[type="date"] {
+  border-radius: 20px;
+  padding: 10px;
+  margin: 5px;
+  width: 100%;
+}
+
+.btn-primary, .btn-success, .btn-secondary, .btn-warning {
+  margin: 5px;
+  border-radius: 20px;
+}

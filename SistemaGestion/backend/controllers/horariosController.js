@@ -60,5 +60,58 @@ const eliminarHorario = async (req, res) => {
     }
 };
 
-module.exports = { crearHorario, obtenerHorarios, eliminarHorario };
+//Guardar Horario Semanala
+const guardarHorarioSemanal = async (req, res) => {
+    const { semana, fecha_inicio, fecha_fin, horarios } = req.body;
+    const empleado_id = req.params.id;
+
+    if (!semana || !fecha_inicio || !fecha_fin || !horarios || horarios.length === 0) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    }
+
+    try {
+        // Eliminar anteriores para esa semana y empleado
+        await pool.query(
+            `DELETE FROM horarios_semanales WHERE empleado_id = $1 AND semana = $2`,
+            [empleado_id, semana]
+        );
+
+        // Insertar cada día y hora
+        for (const h of horarios) {
+            const { dia, hora_inicio, hora_fin } = h;
+            await pool.query(
+                `INSERT INTO horarios_semanales 
+                 (empleado_id, semana, fecha_inicio, fecha_fin, dia, hora_inicio, hora_fin)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [empleado_id, semana, fecha_inicio, fecha_fin, dia, hora_inicio, hora_fin]
+            );
+        }
+
+        res.status(201).json({ message: '✅ Horario semanal guardado correctamente' });
+    } catch (error) {
+        console.error('❌ Error al guardar horario semanal:', error);
+        res.status(500).json({ message: 'Error al guardar horario semanal' });
+    }
+};
+
+//Obtener Horario Semanal
+const obtenerHorarioSemanal = async (req, res) => {
+    const { id } = req.params;
+    const { semana } = req.query;
+
+    try {
+        const result = await pool.query(
+            `SELECT * FROM horarios_semanales 
+             WHERE empleado_id = $1 AND semana = $2 
+             ORDER BY dia`,
+            [id, semana]
+        );
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('❌ Error al obtener horario semanal:', error);
+        res.status(500).json({ message: 'Error al obtener horario semanal' });
+    }
+};
+
+module.exports = { crearHorario, obtenerHorarios, eliminarHorario, guardarHorarioSemanal, obtenerHorarioSemanal };
 

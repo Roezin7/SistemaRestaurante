@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
 import { Table, Button } from 'react-bootstrap';
 
-const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 const HorariosTable = () => {
     const [horarios, setHorarios] = useState([]);
@@ -50,7 +50,7 @@ const HorariosTable = () => {
     return (
         <div>
             <h3>Horario Semanal</h3>
-            <Table striped bordered hover>
+            <Table striped bordered hover responsive>
                 <thead>
                     <tr>
                         {diasSemana.map((dia) => (
@@ -61,7 +61,7 @@ const HorariosTable = () => {
                 <tbody>
                     <tr>
                         {diasSemana.map((dia) => (
-                            <td key={dia}>
+                            <td key={dia} style={{ verticalAlign: 'top' }}>
                                 {filtrarHorariosPorDia(dia)}
                             </td>
                         ))}

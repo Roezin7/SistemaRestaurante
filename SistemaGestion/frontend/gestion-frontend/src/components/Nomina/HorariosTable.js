@@ -11,38 +11,39 @@ const HorariosTable = () => {
     const [semanaSeleccionada, setSemanaSeleccionada] = useState('');
 
     useEffect(() => {
+        const obtenerSemanas = async () => {
+            try {
+                const response = await axios.get('/horarios/semanas');
+                const semanasOrdenadas = response.data.sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio));
+
+                const hoy = dayjs();
+                const semanaActual = semanasOrdenadas.find(s =>
+                    hoy.isAfter(dayjs(s.fecha_inicio).subtract(1, 'day')) &&
+                    hoy.isBefore(dayjs(s.fecha_fin).add(1, 'day'))
+                );
+
+                setSemanas(semanasOrdenadas);
+                if (semanaActual) {
+                    setSemanaSeleccionada(semanaActual.semana_id);
+                } else if (semanasOrdenadas.length > 0) {
+                    setSemanaSeleccionada(semanasOrdenadas[0].semana_id);
+                }
+            } catch (error) {
+                console.error('❌ Error al cargar semanas:', error);
+            }
+        };
         obtenerSemanas();
     }, []);
 
     useEffect(() => {
         if (semanaSeleccionada) {
-            obtenerHorariosPorSemana(semanaSeleccionada);
+            obtenerHorarios(semanaSeleccionada);
         }
     }, [semanaSeleccionada]);
 
-    const obtenerSemanas = async () => {
+    const obtenerHorarios = async (semana_id) => {
         try {
-            const response = await axios.get('/horarios/semanas');
-            const semanasOrdenadas = response.data.sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio));
-            setSemanas(semanasOrdenadas);
-
-            // Seleccionar automáticamente la semana actual si existe
-            const hoy = dayjs();
-            const semanaActual = semanasOrdenadas.find(s =>
-                hoy.isAfter(dayjs(s.fecha_inicio).subtract(1, 'day')) &&
-                hoy.isBefore(dayjs(s.fecha_fin).add(1, 'day'))
-            );
-            if (semanaActual) {
-                setSemanaSeleccionada(semanaActual.semana_id);
-            }
-        } catch (error) {
-            console.error('❌ Error al cargar semanas:', error);
-        }
-    };
-
-    const obtenerHorariosPorSemana = async (semana_id) => {
-        try {
-            const response = await axios.get(`/horarios/semana/${semana_id}`);
+            const response = await axios.get(`/horarios?semana_id=${semana_id}`);
             setHorarios(response.data);
         } catch (error) {
             console.error('❌ Error al cargar horarios:', error);
@@ -54,7 +55,7 @@ const HorariosTable = () => {
             try {
                 await axios.delete(`/horarios/${horario_id}`);
                 alert('✅ Horario eliminado correctamente');
-                obtenerHorariosPorSemana(semanaSeleccionada);
+                obtenerHorarios(semanaSeleccionada); // recargar horarios
             } catch (error) {
                 console.error('❌ Error al eliminar horario:', error);
                 alert('❌ Error al eliminar el horario');
@@ -65,10 +66,11 @@ const HorariosTable = () => {
     const filtrarHorariosPorDia = (dia) => {
         return horarios
             .filter(horario => horario.dia === dia)
+            .sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio))
             .map(horario => (
                 <div key={horario.horario_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>
-                        <strong>{horario.nombre}</strong> <br />
+                        <strong>{horario.nombre}</strong><br />
                         {horario.hora_inicio} - {horario.hora_fin}
                     </span>
                     <Button variant="danger" size="sm" onClick={() => eliminarHorario(horario.horario_id)}>X</Button>
@@ -80,7 +82,7 @@ const HorariosTable = () => {
         <div>
             <h3>Horario Semanal</h3>
 
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-3" controlId="semanaSelect">
                 <Form.Label>Seleccionar Semana</Form.Label>
                 <Form.Select
                     value={semanaSeleccionada}

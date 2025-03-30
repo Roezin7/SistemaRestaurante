@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { crearHorario, obtenerHorarios, eliminarHorario, guardarHorarioSemanal, obtenerHorarioSemanal } = require('../controllers/horariosController');
+const { crearHorario, obtenerHorarios, eliminarHorario, crearSemana, obtenerSemanas } = require('../controllers/horariosController');
 
+// PRIMERO rutas específicas:
+router.post('/semanas', crearSemana);
+router.get('/semanas', obtenerSemanas);
+
+// LUEGO rutas dinámicas:
 router.post('/:empleado_id', crearHorario);
 router.get('/', obtenerHorarios);
 router.delete('/:id', eliminarHorario);
-router.post('/semanal/:id', guardarHorarioSemanal);
-router.get('/semanal/:id', obtenerHorarioSemanal);
 
 module.exports = router;

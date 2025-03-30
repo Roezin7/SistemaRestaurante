@@ -2,49 +2,62 @@ const pool = require('../config/db');  // Asegúrate de que la ruta sea correcta
 
 // Crear Horario
 const crearHorario = async (req, res) => {
+    const { empleado_id } = req.params;
+    const { dias, semana_id } = req.body;
+
+    if (!dias || !semana_id || dias.length === 0) {
+        return res.status(400).json({ message: 'Faltan datos obligatorios' });
+    }
+
     try {
-        const { empleado_id } = req.params;
-        const { dias } = req.body;
+        // Primero elimina horarios existentes del empleado para esa semana (opcional)
+        await pool.query(
+            'DELETE FROM horarios WHERE empleado_id = $1 AND semana_id = $2',
+            [empleado_id, semana_id]
+        );
 
-        if (!empleado_id || !dias || dias.length === 0) {
-            return res.status(400).json({ message: "Todos los campos son obligatorios" });
-        }
-
+        // Insertar nuevos horarios
         for (const dia of dias) {
-            const { dia: nombreDia, hora_inicio, hora_fin } = dia;
-
-            if (!nombreDia || !hora_inicio || !hora_fin) {
-                console.warn(`🚫 Campos incompletos: ${nombreDia}, ${hora_inicio}, ${hora_fin}`);
-                continue;
-            }
-
-            console.log(`🌟 Guardando horario para el día: ${nombreDia}, inicio: ${hora_inicio}, fin: ${hora_fin}`);
-
             await pool.query(
-                'INSERT INTO horarios (empleado_id, dia, hora_inicio, hora_fin) VALUES ($1, $2, $3::time, $4::time)',
-                [empleado_id, nombreDia, hora_inicio, hora_fin]
+                'INSERT INTO horarios (empleado_id, dia, hora_inicio, hora_fin, semana_id) VALUES ($1, $2, $3, $4, $5)',
+                [empleado_id, dia.dia, dia.hora_inicio, dia.hora_fin, semana_id]
             );
         }
 
-        res.status(201).json({ message: "Horarios creados exitosamente" });
+        res.status(201).json({ message: 'Horario guardado correctamente' });
     } catch (error) {
-        console.error('❌ Error al crear horario:', error.message);
-        res.status(500).json({ message: 'Error al crear horario', error: error.message });
+        console.error('❌ Error al guardar horario:', error);
+        res.status(500).json({ message: 'Error al guardar horario' });
     }
 };
 
-// Obtener Horarios para el Calendario
+
+// Controlador actualizado
 const obtenerHorarios = async (req, res) => {
+    const { semana_id } = req.query;
+
     try {
-        const result = await pool.query(`
-            SELECT h.horario_id, h.dia, h.hora_inicio, h.hora_fin, e.nombre 
-            FROM horarios h
-            JOIN empleados e ON h.empleado_id = e.empleado_id
-        `);
+        let result;
+        if (semana_id) {
+            result = await pool.query(
+                `SELECT h.*, e.nombre 
+                 FROM horarios h
+                 JOIN empleados e ON h.empleado_id = e.empleado_id
+                 WHERE h.semana_id = $1`,
+                [semana_id]
+            );
+        } else {
+            result = await pool.query(
+                `SELECT h.*, e.nombre 
+                 FROM horarios h
+                 JOIN empleados e ON h.empleado_id = e.empleado_id`
+            );
+        }
+
         res.status(200).json(result.rows);
     } catch (error) {
-        console.error('❌ Error al obtener horarios:', error.message);
-        res.status(500).json({ message: 'Error al obtener horarios', error: error.message });
+        console.error('❌ Error al obtener horarios:', error);
+        res.status(500).json({ message: 'Error al obtener horarios' });
     }
 };
 
@@ -60,58 +73,33 @@ const eliminarHorario = async (req, res) => {
     }
 };
 
-//Guardar Horario Semanala
-const guardarHorarioSemanal = async (req, res) => {
-    const { semana, fecha_inicio, fecha_fin, horarios } = req.body;
-    const empleado_id = req.params.id;
-
-    if (!semana || !fecha_inicio || !fecha_fin || !horarios || horarios.length === 0) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
-    }
-
-    try {
-        // Eliminar anteriores para esa semana y empleado
-        await pool.query(
-            `DELETE FROM horarios_semanales WHERE empleado_id = $1 AND semana = $2`,
-            [empleado_id, semana]
-        );
-
-        // Insertar cada día y hora
-        for (const h of horarios) {
-            const { dia, hora_inicio, hora_fin } = h;
-            await pool.query(
-                `INSERT INTO horarios_semanales 
-                 (empleado_id, semana, fecha_inicio, fecha_fin, dia, hora_inicio, hora_fin)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [empleado_id, semana, fecha_inicio, fecha_fin, dia, hora_inicio, hora_fin]
-            );
-        }
-
-        res.status(201).json({ message: '✅ Horario semanal guardado correctamente' });
-    } catch (error) {
-        console.error('❌ Error al guardar horario semanal:', error);
-        res.status(500).json({ message: 'Error al guardar horario semanal' });
-    }
-};
-
-//Obtener Horario Semanal
-const obtenerHorarioSemanal = async (req, res) => {
-    const { id } = req.params;
-    const { semana } = req.query;
+// Crear nueva semana
+const crearSemana = async (req, res) => {
+    const { numero_semana, fecha_inicio, fecha_fin } = req.body;
 
     try {
         const result = await pool.query(
-            `SELECT * FROM horarios_semanales 
-             WHERE empleado_id = $1 AND semana = $2 
-             ORDER BY dia`,
-            [id, semana]
+            'INSERT INTO semanas (numero_semana, fecha_inicio, fecha_fin) VALUES ($1, $2, $3) RETURNING *',
+            [numero_semana, fecha_inicio, fecha_fin]
         );
-        res.status(200).json(result.rows);
+        res.status(201).json(result.rows[0]);
     } catch (error) {
-        console.error('❌ Error al obtener horario semanal:', error);
-        res.status(500).json({ message: 'Error al obtener horario semanal' });
+        console.error('❌ Error al crear semana:', error);
+        res.status(500).json({ message: 'Error al crear semana' });
     }
 };
 
-module.exports = { crearHorario, obtenerHorarios, eliminarHorario, guardarHorarioSemanal, obtenerHorarioSemanal };
+// Obtener semanas registradas
+const obtenerSemanas = async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM semanas ORDER BY fecha_inicio DESC');
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('❌ Error al obtener semanas:', error);
+        res.status(500).json({ message: 'Error al obtener semanas' });
+    }
+};
+
+
+module.exports = { crearHorario, obtenerHorarios, eliminarHorario, crearSemana, obtenerSemanas };
 

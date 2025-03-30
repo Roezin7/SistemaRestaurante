@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from '../../api/axios';
 import { Button, Form } from 'react-bootstrap';
 import { TimePicker } from 'antd';
 import 'antd/dist/reset.css';
@@ -7,6 +8,20 @@ const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sába
 
 const HorarioForm = ({ onSave }) => {
     const [horarios, setHorarios] = useState({});
+    const [semanas, setSemanas] = useState([]);
+    const [semanaSeleccionada, setSemanaSeleccionada] = useState('');
+
+    useEffect(() => {
+        const obtenerSemanas = async () => {
+            try {
+                const response = await axios.get('/horarios/semanas');
+                setSemanas(response.data);
+            } catch (error) {
+                console.error('❌ Error al obtener semanas:', error);
+            }
+        };
+        obtenerSemanas();
+    }, []);
 
     const handleHorarioChange = (dia, horaInicio, horaFin) => {
         setHorarios((prev) => ({
@@ -16,6 +31,11 @@ const HorarioForm = ({ onSave }) => {
     };
 
     const guardarHorarios = () => {
+        if (!semanaSeleccionada) {
+            alert('Selecciona una semana antes de guardar.');
+            return;
+        }
+
         const dias = diasSemana
             .filter(dia => horarios[dia]?.inicio && horarios[dia]?.fin)
             .map(dia => ({
@@ -29,12 +49,29 @@ const HorarioForm = ({ onSave }) => {
             return;
         }
 
-        onSave(dias);
+        // 🟢 Enviar también el semana_id
+        onSave(dias, semanaSeleccionada);
     };
 
     return (
         <div>
             <h5>Asignar Horario</h5>
+
+            <Form.Group className="mb-3">
+                <Form.Label>Seleccionar Semana</Form.Label>
+                <Form.Select
+                    value={semanaSeleccionada}
+                    onChange={(e) => setSemanaSeleccionada(e.target.value)}
+                >
+                    <option value="">Selecciona una semana</option>
+                    {semanas.map((semana) => (
+                        <option key={semana.semana_id} value={semana.semana_id}>
+                            Semana {semana.numero_semana} ({semana.inicio} al {semana.fin})
+                        </option>
+                    ))}
+                </Form.Select>
+            </Form.Group>
+
             {diasSemana.map((dia) => (
                 <Form.Group key={dia} className="mb-3">
                     <Form.Label>{dia}</Form.Label>
@@ -52,6 +89,7 @@ const HorarioForm = ({ onSave }) => {
                     </div>
                 </Form.Group>
             ))}
+
             <Button variant="success" onClick={guardarHorarios}>Guardar Horario</Button>
         </div>
     );

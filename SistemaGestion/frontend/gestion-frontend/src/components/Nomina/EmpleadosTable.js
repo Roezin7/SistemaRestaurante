@@ -63,9 +63,9 @@ const EmpleadosTable = () => {
         }
     };
 
-    const guardarHorario = async (empleado_id, dias) => {
+    const guardarHorario = async (empleado_id, dias, semana_id) => {
         try {
-            await axios.post(`/horarios/${empleado_id}`, { dias });
+            await axios.post(`/horarios/${empleado_id}`, { dias, semana_id });
             alert('✅ Horario guardado correctamente');
             setShowHorario(false);
             obtenerEmpleados();
@@ -73,7 +73,7 @@ const EmpleadosTable = () => {
             console.error('❌ Error al guardar horario:', error);
             alert('❌ Error al guardar el horario');
         }
-    };
+    };    
 
     const editarHorario = (empleado) => {
         setEmpleadoSeleccionado(empleado);
@@ -178,7 +178,7 @@ const EmpleadosTable = () => {
                 </Modal.Header>
                 <Modal.Body>
                     {empleadoSeleccionado && (
-                        <HorarioForm onSave={(dias) => guardarHorario(empleadoSeleccionado.empleado_id, dias)} />
+                        <HorarioForm onSave={(dias, semana_id) => guardarHorario(empleadoSeleccionado.empleado_id, dias, semana_id)} />
                     )}
                 </Modal.Body>
             </Modal>

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
 import { Table, Button, Form } from 'react-bootstrap';
+import dayjs from 'dayjs';
 
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 const HorariosTable = () => {
     const [horarios, setHorarios] = useState([]);
     const [semanas, setSemanas] = useState([]);
-    const [semanaSeleccionada, setSemanaSeleccionada] = useState(null);
+    const [semanaSeleccionada, setSemanaSeleccionada] = useState('');
 
     useEffect(() => {
         obtenerSemanas();
@@ -15,25 +16,33 @@ const HorariosTable = () => {
 
     useEffect(() => {
         if (semanaSeleccionada) {
-            obtenerHorarios(semanaSeleccionada);
+            obtenerHorariosPorSemana(semanaSeleccionada);
         }
     }, [semanaSeleccionada]);
 
     const obtenerSemanas = async () => {
         try {
             const response = await axios.get('/horarios/semanas');
-            setSemanas(response.data);
-            if (response.data.length > 0) {
-                setSemanaSeleccionada(response.data[0].semana_id); // seleccionar la más reciente por defecto
+            const semanasOrdenadas = response.data.sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio));
+            setSemanas(semanasOrdenadas);
+
+            // Seleccionar automáticamente la semana actual si existe
+            const hoy = dayjs();
+            const semanaActual = semanasOrdenadas.find(s =>
+                hoy.isAfter(dayjs(s.fecha_inicio).subtract(1, 'day')) &&
+                hoy.isBefore(dayjs(s.fecha_fin).add(1, 'day'))
+            );
+            if (semanaActual) {
+                setSemanaSeleccionada(semanaActual.semana_id);
             }
         } catch (error) {
             console.error('❌ Error al cargar semanas:', error);
         }
     };
 
-    const obtenerHorarios = async (semana_id) => {
+    const obtenerHorariosPorSemana = async (semana_id) => {
         try {
-            const response = await axios.get(`/horarios?semana_id=${semana_id}`);
+            const response = await axios.get(`/horarios/semana/${semana_id}`);
             setHorarios(response.data);
         } catch (error) {
             console.error('❌ Error al cargar horarios:', error);
@@ -45,7 +54,7 @@ const HorariosTable = () => {
             try {
                 await axios.delete(`/horarios/${horario_id}`);
                 alert('✅ Horario eliminado correctamente');
-                obtenerHorarios(semanaSeleccionada); // recargar horarios
+                obtenerHorariosPorSemana(semanaSeleccionada);
             } catch (error) {
                 console.error('❌ Error al eliminar horario:', error);
                 alert('❌ Error al eliminar el horario');
@@ -59,7 +68,7 @@ const HorariosTable = () => {
             .map(horario => (
                 <div key={horario.horario_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>
-                        <strong>{horario.nombre}</strong><br />
+                        <strong>{horario.nombre}</strong> <br />
                         {horario.hora_inicio} - {horario.hora_fin}
                     </span>
                     <Button variant="danger" size="sm" onClick={() => eliminarHorario(horario.horario_id)}>X</Button>
@@ -71,15 +80,16 @@ const HorariosTable = () => {
         <div>
             <h3>Horario Semanal</h3>
 
-            <Form.Group className="mb-3" controlId="semanaSelect">
+            <Form.Group className="mb-3">
                 <Form.Label>Seleccionar Semana</Form.Label>
                 <Form.Select
-                    value={semanaSeleccionada || ''}
+                    value={semanaSeleccionada}
                     onChange={(e) => setSemanaSeleccionada(e.target.value)}
                 >
+                    <option value="">Selecciona una semana</option>
                     {semanas.map((semana) => (
                         <option key={semana.semana_id} value={semana.semana_id}>
-                            Semana {semana.numero_semana} ({new Date(semana.fecha_inicio).toLocaleDateString()} al {new Date(semana.fecha_fin).toLocaleDateString()})
+                            Semana {semana.numero_semana} ({dayjs(semana.fecha_inicio).format('DD MMM YYYY')} al {dayjs(semana.fecha_fin).format('DD MMM YYYY')})
                         </option>
                     ))}
                 </Form.Select>

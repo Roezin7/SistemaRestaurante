@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
 import { Button, Form } from 'react-bootstrap';
 import { TimePicker } from 'antd';
+import dayjs from 'dayjs';
 import 'antd/dist/reset.css';
 
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -15,7 +16,18 @@ const HorarioForm = ({ onSave }) => {
         const obtenerSemanas = async () => {
             try {
                 const response = await axios.get('/horarios/semanas');
-                setSemanas(response.data);
+                const semanasOrdenadas = response.data.sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio));
+
+                const hoy = dayjs();
+                const semanaActual = semanasOrdenadas.find(s =>
+                    hoy.isAfter(dayjs(s.fecha_inicio).subtract(1, 'day')) &&
+                    hoy.isBefore(dayjs(s.fecha_fin).add(1, 'day'))
+                );
+
+                setSemanas(semanasOrdenadas);
+                if (semanaActual) {
+                    setSemanaSeleccionada(semanaActual.semana_id);
+                }
             } catch (error) {
                 console.error('❌ Error al obtener semanas:', error);
             }
@@ -49,7 +61,6 @@ const HorarioForm = ({ onSave }) => {
             return;
         }
 
-        // 🟢 Enviar también el semana_id
         onSave(dias, semanaSeleccionada);
     };
 
@@ -66,7 +77,7 @@ const HorarioForm = ({ onSave }) => {
                     <option value="">Selecciona una semana</option>
                     {semanas.map((semana) => (
                         <option key={semana.semana_id} value={semana.semana_id}>
-                            Semana {semana.numero_semana} ({semana.inicio} al {semana.fin})
+                            Semana {semana.numero_semana} ({dayjs(semana.fecha_inicio).format('DD MMM YYYY')} al {dayjs(semana.fecha_fin).format('DD MMM YYYY')})
                         </option>
                     ))}
                 </Form.Select>

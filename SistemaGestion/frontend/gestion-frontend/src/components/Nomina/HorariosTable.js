@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
 import { Table, Button, Form } from 'react-bootstrap';
 import dayjs from 'dayjs';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable'; // sin destructuring
+
 
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -55,7 +58,7 @@ const HorariosTable = () => {
             try {
                 await axios.delete(`/horarios/${horario_id}`);
                 alert('✅ Horario eliminado correctamente');
-                obtenerHorarios(semanaSeleccionada); // recargar horarios
+                obtenerHorarios(semanaSeleccionada);
             } catch (error) {
                 console.error('❌ Error al eliminar horario:', error);
                 alert('❌ Error al eliminar el horario');
@@ -78,9 +81,56 @@ const HorariosTable = () => {
             ));
     };
 
+    const exportarPDF = () => {
+        const doc = new jsPDF({ orientation: 'landscape' });
+        const semana = semanas.find(s => s.semana_id === semanaSeleccionada);
+        const titulo = semana
+            ? `Semana ${semana.numero_semana} (${dayjs(semana.fecha_inicio).format('DD MMM YYYY')} al ${dayjs(semana.fecha_fin).format('DD MMM YYYY')})`
+            : 'Horario Semanal';
+    
+        doc.setFontSize(14);
+        doc.text(titulo, 10, 15);
+    
+        // 1. Agrupar por hora (inicio-fin) en formato string
+        const bloques = [];
+        horarios.forEach(h => {
+            const bloque = `${h.hora_inicio} - ${h.hora_fin}`;
+            if (!bloques.includes(bloque)) bloques.push(bloque);
+        });
+    
+        bloques.sort((a, b) => a.localeCompare(b)); // ordenar cronológicamente
+    
+        // 2. Crear una fila por bloque de tiempo
+        const body = bloques.map(bloque => {
+            return diasSemana.map(dia => {
+                const registro = horarios.find(h =>
+                    h.dia === dia &&
+                    `${h.hora_inicio} - ${h.hora_fin}` === bloque
+                );
+                return registro ? `${registro.nombre}\n(${registro.hora_inicio} - ${registro.hora_fin})` : '';
+            });
+        });
+    
+        // 3. Insertar la tabla
+        doc.autoTable({
+            head: [diasSemana],
+            body,
+            startY: 25,
+            styles: { halign: 'center', valign: 'middle', fontSize: 9 },
+            headStyles: { fillColor: [41, 128, 185] },
+            theme: 'grid',
+        });
+    
+        doc.save(`${titulo}.pdf`);
+    };
+    
     return (
         <div>
             <h3>Horario Semanal</h3>
+
+            <Button variant="outline-primary" className="mb-3" onClick={exportarPDF}>
+                Exportar a PDF
+            </Button>
 
             <Form.Group className="mb-3" controlId="semanaSelect">
                 <Form.Label>Seleccionar Semana</Form.Label>

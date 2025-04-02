@@ -73,7 +73,7 @@ const EmpleadosTable = () => {
             console.error('❌ Error al guardar horario:', error);
             alert('❌ Error al guardar el horario');
         }
-    };    
+    };
 
     const editarHorario = (empleado) => {
         setEmpleadoSeleccionado(empleado);
@@ -99,7 +99,7 @@ const EmpleadosTable = () => {
                         <tr key={empleado.empleado_id}>
                             <td>{empleado.nombre}</td>
                             <td>{empleado.puesto}</td>
-                            <td>${empleado.salario}</td>
+                            <td>${parseFloat(empleado.salario).toFixed(2)}</td>
                             <td>
                                 <Button
                                     variant="warning"
@@ -127,6 +127,14 @@ const EmpleadosTable = () => {
                             </td>
                         </tr>
                     ))}
+                    <tr>
+                        <td colSpan={2}><strong>Total de la Nómina</strong></td>
+                        <td colSpan={2}>
+                            <strong>
+                                ${empleados.reduce((total, emp) => total + parseFloat(emp.salario || 0), 0).toFixed(2)}
+                            </strong>
+                        </td>
+                    </tr>
                 </tbody>
             </Table>
 
@@ -178,7 +186,10 @@ const EmpleadosTable = () => {
                 </Modal.Header>
                 <Modal.Body>
                     {empleadoSeleccionado && (
-                        <HorarioForm onSave={(dias, semana_id) => guardarHorario(empleadoSeleccionado.empleado_id, dias, semana_id)} />
+                        <HorarioForm
+                            onSave={(dias, semana_id) => guardarHorario(empleadoSeleccionado.empleado_id, dias, semana_id)}
+                            empleadoId={empleadoSeleccionado.empleado_id}
+                        />
                     )}
                 </Modal.Body>
             </Modal>

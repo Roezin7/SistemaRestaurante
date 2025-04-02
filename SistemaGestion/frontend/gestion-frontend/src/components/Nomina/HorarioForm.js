@@ -1,3 +1,4 @@
+// ⬇️ MODIFICADO HorarioForm.js
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
 import { Button, Form } from 'react-bootstrap';
@@ -7,7 +8,7 @@ import 'antd/dist/reset.css';
 
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-const HorarioForm = ({ onSave }) => {
+const HorarioForm = ({ onSave, empleadoId }) => {
     const [horarios, setHorarios] = useState({});
     const [semanas, setSemanas] = useState([]);
     const [semanaSeleccionada, setSemanaSeleccionada] = useState('');
@@ -34,6 +35,23 @@ const HorarioForm = ({ onSave }) => {
         };
         obtenerSemanas();
     }, []);
+
+    useEffect(() => {
+        const obtenerHorariosExistentes = async () => {
+            if (!semanaSeleccionada || !empleadoId) return;
+            try {
+                const response = await axios.get(`/horarios?semana_id=${semanaSeleccionada}&empleado_id=${empleadoId}`);
+                const horariosCargados = {};
+                response.data.forEach(({ dia, hora_inicio, hora_fin }) => {
+                    horariosCargados[dia] = { inicio: hora_inicio, fin: hora_fin };
+                });
+                setHorarios(horariosCargados);
+            } catch (error) {
+                console.error('❌ Error al cargar horarios del empleado:', error);
+            }
+        };
+        obtenerHorariosExistentes();
+    }, [semanaSeleccionada, empleadoId]);
 
     const handleHorarioChange = (dia, horaInicio, horaFin) => {
         setHorarios((prev) => ({
@@ -90,11 +108,13 @@ const HorarioForm = ({ onSave }) => {
                         <TimePicker
                             placeholder="Inicio"
                             format="HH:mm"
+                            value={horarios[dia]?.inicio ? dayjs(horarios[dia].inicio, 'HH:mm') : null}
                             onChange={(time, timeString) => handleHorarioChange(dia, timeString, horarios[dia]?.fin)}
                         />
                         <TimePicker
                             placeholder="Fin"
                             format="HH:mm"
+                            value={horarios[dia]?.fin ? dayjs(horarios[dia].fin, 'HH:mm') : null}
                             onChange={(time, timeString) => handleHorarioChange(dia, horarios[dia]?.inicio, timeString)}
                         />
                     </div>

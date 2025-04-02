@@ -1,34 +1,64 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from '../../api/axios';
+import './ResumenDiario.css'; // Asegúrate de tener este CSS para los KPIs
 
 const ResumenDiario = () => {
-    const [ingresos, setIngresos] = useState(0);
-    const [egresos, setEgresos] = useState(0);
-    const [balance, setBalance] = useState(0);
+    const [resumen, setResumen] = useState({
+        ingresos: 0,
+        egresos: 0,
+        balance: 0,
+        chequesPendientes: 0
+    });
 
     useEffect(() => {
         const obtenerResumen = async () => {
             try {
                 const response = await axios.get('/finanzas/resumen');
-                setIngresos(response.data.ingresos);
-                setEgresos(response.data.egresos);
-                setBalance(response.data.balance);
+                setResumen(response.data);
             } catch (error) {
-                console.error("❌ Error al obtener el resumen financiero:", error);
+                console.error('❌ Error al obtener resumen diario:', error);
             }
         };
 
         obtenerResumen();
     }, []);
 
+    const formatter = new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: 'MXN'
+    });
+
+    const tarjetas = [
+        {
+            titulo: 'Ingresos',
+            valor: formatter.format(resumen.ingresos),
+            color: '#2E7D32'
+        },
+        {
+            titulo: 'Egresos',
+            valor: formatter.format(resumen.egresos),
+            color: '#C62828'
+        },
+        {
+            titulo: 'Balance',
+            valor: formatter.format(resumen.balance),
+            color: resumen.balance >= 0 ? '#1976D2' : '#D32F2F'
+        },
+        {
+            titulo: 'Cheques Pendientes',
+            valor: formatter.format(resumen.chequesPendientes),
+            color: '#F9A825'
+        }
+    ];
+
     return (
-        <div className="card">
-            <div className="card-body">
-                <h4>Resumen Diario</h4>
-                <p>Ingresos: ${ingresos.toFixed(2)}</p>
-                <p>Egresos: ${egresos.toFixed(2)}</p>
-                <p>Balance: ${balance.toFixed(2)}</p>
-            </div>
+        <div className="resumen-container fade-in">
+            {tarjetas.map((card, index) => (
+                <div key={index} className="kpi-card" style={{ borderLeft: `5px solid ${card.color}` }}>
+                    <div className="kpi-title">{card.titulo}</div>
+                    <div className="kpi-value">{card.valor}</div>
+                </div>
+            ))}
         </div>
     );
 };

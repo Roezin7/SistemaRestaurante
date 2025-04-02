@@ -1,3 +1,4 @@
+/* ========== BASE GENERAL ========== */
 body {
     margin: 0;
     font-family: 'Arial', sans-serif;
@@ -5,59 +6,49 @@ body {
     color: #FFFFFF;
 }
 
+/* ========== CONTENEDORES Y ESPACIOS ========== */
 .container {
     margin: 20px;
     padding: 20px;
     border-radius: 8px;
     background-color: #1E1E1E;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
-/* Encabezados (asegurando que siempre sean blancos) */
-h1, h2, h3, h4, h5, h6 {
+/* ========== ENCABEZADOS ========== */
+h2 {
     margin-bottom: 15px;
-    color: #FFFFFF !important;
+    color: #ffffff !important;
     font-weight: bold;
     text-shadow: 1px 1px 2px #000000;
 }
 
-h1 {
-    font-size: 36px;
+h1, h3, h4, h5, h6 {
+    margin-bottom: 15px;
+    color: #a0a0a0 !important;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #000000;
 }
 
-h2 {
-    font-size: 32px;
-    color: #FFFFFF !important;
-}
+h1 { font-size: 36px; }
+h2 { font-size: 32px; }
+h3 { font-size: 28px; }
+h4 { font-size: 24px; }
+h5 { font-size: 20px; }
+h6 { font-size: 18px; }
 
-h3 {
-    font-size: 28px;
-    color: #FFFFFF !important;
-}
-
-h4 {
-    font-size: 24px;
-    color: #FFFFFF !important;
-}
-
-h5 {
-    font-size: 20px;
-    color: #FFFFFF !important;
-}
-
-h6 {
-    font-size: 18px;
-    color: #FFFFFF !important;
-}
-
+/* ========== TABLAS ========== */
 .table {
     width: 100%;
     margin-top: 20px;
     color: #FFFFFF;
     background-color: #252525;
+    border-radius: 6px;
+    overflow: hidden;
 }
 
 .table th {
-    background-color: #444;
+    background-color: #2A2A2A;
     color: #FFFFFF;
     padding: 12px;
     text-align: left;
@@ -68,45 +59,59 @@ h6 {
     border-bottom: 1px solid #555;
 }
 
-input, select, button {
-    background-color: #333;
+/* ========== FORMULARIOS Y ELEMENTOS ========== */
+input, select, button, textarea {
+    background-color: #1A1A1A;
     color: #FFFFFF;
-    border: 1px solid #555;
+    border: 1px solid #444;
     border-radius: 5px;
-    padding: 8px;
-    margin: 5px;
+    padding: 10px;
+    margin: 5px 0;
+    transition: border 0.3s, background-color 0.3s;
 }
 
-input:focus, select:focus, button:focus {
+input:focus, select:focus, button:focus, textarea:focus {
     outline: none;
     border-color: #6200EA;
+    background-color: #222;
 }
 
+/* ========== BOTONES ========== */
 .btn {
     background-color: #6200EA;
     color: white;
     border-radius: 5px;
     padding: 8px 16px;
     margin: 5px;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.2s ease-in-out;
+    font-weight: 500;
 }
 
 .btn:hover {
     background-color: #3700B3;
+    transform: scale(1.05);
 }
 
+/* ========== NAVBAR ========== */
 .navbar {
-    background-color: #333;
+    background-color: #181818;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
 .navbar-brand, .nav-link {
     color: #FFF !important;
+    font-weight: 500;
+}
+
+.nav-link {
+    margin-right: 10px;
 }
 
 .nav-link:hover {
     color: #DDD !important;
 }
 
+/* ========== CALENDARIO FULLCALENDAR ========== */
 .calendar-container {
     margin: 20px 0;
     background-color: #252525;
@@ -145,3 +150,41 @@ input:focus, select:focus, button:focus {
     padding: 10px;
     border-radius: 5px;
 }
+
+/* ========== TARJETAS ========== */
+.card {
+    background-color: #1E1E1E;
+    border: 1px solid #2A2A2A;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    padding: 20px;
+    color: #CCCCCC;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+.card h1,
+.card h2,
+.card h3,
+.card h4,
+.card h5,
+.card h6 {
+    color: #585858;
+    text-shadow: none;
+}
+
+/* ========== ANIMACIONES ========== */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== KPIs ========== */

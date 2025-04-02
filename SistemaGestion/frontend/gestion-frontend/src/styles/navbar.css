@@ -1,11 +1,44 @@
-.navbar {
-    background-color: #333;
+.custom-navbar {
+    background-color: #1f1f1f !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+    transition: background-color 0.3s ease;
 }
 
-.navbar-brand, .nav-link {
-    color: #FFF !important;
+.custom-brand {
+    font-weight: 700;
+    font-size: 28px;
+    color: #FFFFFF !important;
+    letter-spacing: 1px;
+    transition: color 0.3s ease;
 }
 
-.nav-link:hover {
-    color: #DDD !important;
+.custom-brand:hover {
+    color: #BB86FC !important;
+}
+
+.custom-link {
+    font-size: 16px;
+    margin-left: 18px;
+    color: #FFFFFF !important;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.custom-link:hover {
+    color: #BB86FC !important;
+}
+
+.custom-link::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0%;
+    height: 2px;
+    background-color: #BB86FC;
+    transition: width 0.3s ease;
+}
+
+.custom-link:hover::after {
+    width: 100%;
 }

@@ -90,7 +90,7 @@ const EmpleadosTable = () => {
                     <tr>
                         <th>Nombre</th>
                         <th>Puesto</th>
-                        <th>Salario</th>
+                        <th>Salario quincenal</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -162,7 +162,7 @@ const EmpleadosTable = () => {
                             />
                         </Form.Group>
                         <Form.Group>
-                            <Form.Label>Salario</Form.Label>
+                            <Form.Label>Salario quincenal</Form.Label>
                             <Form.Control
                                 type="number"
                                 value={nuevoEmpleado.salario}

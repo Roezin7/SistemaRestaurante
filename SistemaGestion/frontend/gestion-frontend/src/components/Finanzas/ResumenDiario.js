@@ -46,7 +46,7 @@ const ResumenDiario = () => {
         },
         {
             titulo: 'Cheques Pendientes',
-            valor: formatter.format(resumen.chequesPendientes),
+            valor: resumen.chequesPendientes,
             color: '#F9A825'
         }
     ];

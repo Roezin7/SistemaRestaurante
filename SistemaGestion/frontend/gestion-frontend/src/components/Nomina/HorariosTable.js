@@ -81,48 +81,57 @@ const HorariosTable = () => {
             ));
     };
 
-    const exportarPDF = () => {
-        const doc = new jsPDF({ orientation: 'landscape' });
-        const semana = semanas.find(s => s.semana_id === semanaSeleccionada);
-        const titulo = semana
-            ? `Semana ${semana.numero_semana} (${dayjs(semana.fecha_inicio).format('DD MMM YYYY')} al ${dayjs(semana.fecha_fin).format('DD MMM YYYY')})`
-            : 'Horario Semanal';
-    
-        doc.setFontSize(14);
-        doc.text(titulo, 10, 15);
-    
-        // 1. Agrupar por hora (inicio-fin) en formato string
-        const bloques = [];
-        horarios.forEach(h => {
-            const bloque = `${h.hora_inicio} - ${h.hora_fin}`;
-            if (!bloques.includes(bloque)) bloques.push(bloque);
-        });
-    
-        bloques.sort((a, b) => a.localeCompare(b)); // ordenar cronológicamente
-    
-        // 2. Crear una fila por bloque de tiempo
-        const body = bloques.map(bloque => {
-            return diasSemana.map(dia => {
-                const registro = horarios.find(h =>
-                    h.dia === dia &&
-                    `${h.hora_inicio} - ${h.hora_fin}` === bloque
-                );
-                return registro ? `${registro.nombre}\n(${registro.hora_inicio} - ${registro.hora_fin})` : '';
-            });
-        });
-    
-        // 3. Insertar la tabla
-        doc.autoTable({
-            head: [diasSemana],
-            body,
-            startY: 25,
-            styles: { halign: 'center', valign: 'middle', fontSize: 9 },
-            headStyles: { fillColor: [41, 128, 185] },
-            theme: 'grid',
-        });
-    
-        doc.save(`${titulo}.pdf`);
-    };
+  const exportarPDF = () => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+
+    const semana = semanas.find(s => s.semana_id === semanaSeleccionada);
+    const titulo = semana
+        ? `Semana ${semana.numero_semana}: ${dayjs(semana.fecha_inicio).format('DD MMM YYYY')} al ${dayjs(semana.fecha_fin).format('DD MMM YYYY')}`
+        : 'Horario Semanal';
+
+    doc.setFontSize(16);
+    doc.text('Horario Semanal', 14, 15);
+
+    doc.setFontSize(12);
+    doc.text(titulo, 14, 23);
+
+    const diasConHorarios = {};
+    diasSemana.forEach(dia => {
+        diasConHorarios[dia] = horarios
+            .filter(h => h.dia === dia)
+            .sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio))
+            .map(h => `${h.nombre.toUpperCase()}\n${h.hora_inicio.slice(0, 5)} - ${h.hora_fin.slice(0, 5)}`);
+    });
+
+    const maxFilas = Math.max(...Object.values(diasConHorarios).map(arr => arr.length));
+    const body = [];
+
+    for (let i = 0; i < maxFilas; i++) {
+        const fila = diasSemana.map(dia => diasConHorarios[dia][i] || '—');
+        body.push(fila);
+    }
+
+    doc.autoTable({
+        head: [diasSemana],
+        body,
+        startY: 30,
+        styles: {
+            halign: 'center',
+            valign: 'middle',
+            fontSize: 9,
+            cellPadding: 3
+        },
+        headStyles: {
+            fillColor: [33, 150, 243],
+            textColor: 255,
+            fontStyle: 'bold'
+        },
+        theme: 'grid',
+        pageBreak: 'auto', // 👈 esto permite salto de página si es necesario
+    });
+
+    doc.save(`${titulo}.pdf`);
+};
     
     return (
         <div>

@@ -92,16 +92,34 @@ const obtenerResumen = async (req, res) => {
     }
 };
 
-
 const obtenerMovimientos = async (req, res) => {
     try {
         const result = await pool.query(`
-            SELECT 'ingreso' AS tipo, concepto, monto, fecha, metodo_pago, NULL AS beneficiario, NULL AS numero_cheque
+            SELECT 
+                ingreso_id AS id,
+                'ingreso' AS tipo, 
+                concepto, 
+                monto, 
+                fecha, 
+                metodo_pago, 
+                NULL AS beneficiario, 
+                NULL AS numero_cheque
             FROM ingresos
+
             UNION ALL
-            SELECT 'egreso' AS tipo, e.concepto, e.monto, e.fecha, e.metodo_pago, c.beneficiario, c.numero_cheque
+
+            SELECT 
+                egreso_id AS id,
+                'egreso' AS tipo, 
+                e.concepto, 
+                e.monto, 
+                e.fecha, 
+                e.metodo_pago, 
+                c.beneficiario, 
+                c.numero_cheque
             FROM egresos e
             LEFT JOIN cheques c ON e.concepto = c.concepto
+
             ORDER BY fecha DESC;
         `);
         res.status(200).json(result.rows);
@@ -121,7 +139,66 @@ const obtenerCheques = async (req, res) => {
     }
 };
 
+const eliminarIngreso = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM ingresos WHERE ingreso_id = $1', [id]);
+        res.status(200).json({ message: 'Ingreso eliminado correctamente' });
+    } catch (error) {
+        console.error('❌ Error al eliminar ingreso:', error);
+        res.status(500).json({ message: 'Error al eliminar ingreso' });
+    }
+};
 
+const eliminarEgreso = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM egresos WHERE egreso_id = $1', [id]);
+        res.status(200).json({ message: 'Egreso eliminado correctamente' });
+    } catch (error) {
+        console.error('❌ Error al eliminar egreso:', error);
+        res.status(500).json({ message: 'Error al eliminar egreso' });
+    }
+};
+
+const editarIngreso = async (req, res) => {
+    const { id } = req.params;
+    const { concepto, monto, fecha, metodo_pago } = req.body;
+    try {
+        await pool.query(
+            'UPDATE ingresos SET concepto = $1, monto = $2, fecha = $3, metodo_pago = $4 WHERE ingreso_id = $5',
+            [concepto, monto, fecha, metodo_pago, id]
+        );
+        res.status(200).json({ message: 'Ingreso actualizado correctamente' });
+    } catch (error) {
+        console.error('❌ Error al editar ingreso:', error);
+        res.status(500).json({ message: 'Error al editar ingreso' });
+    }
+};
+
+const editarEgreso = async (req, res) => {
+    const { id } = req.params;
+    const { concepto, monto, fecha, metodo_pago, beneficiario, numero_cheque } = req.body;
+    try {
+        await pool.query(
+            'UPDATE egresos SET concepto = $1, monto = $2, fecha = $3, metodo_pago = $4 WHERE egreso_id = $5',
+            [concepto, monto, fecha, metodo_pago, id]
+        );
+
+        // Si es cheque, actualiza también
+        if (metodo_pago === 'cheque') {
+            await pool.query(
+                'UPDATE cheques SET beneficiario = $1, numero_cheque = $2 WHERE concepto = $3',
+                [beneficiario, numero_cheque, concepto]
+            );
+        }
+
+        res.status(200).json({ message: 'Egreso actualizado correctamente' });
+    } catch (error) {
+        console.error('❌ Error al editar egreso:', error);
+        res.status(500).json({ message: 'Error al editar egreso' });
+    }
+};
 
 module.exports = {
     registrarIngreso,
@@ -130,5 +207,9 @@ module.exports = {
     obtenerEgresos,
     obtenerResumen,
     obtenerMovimientos,
-    obtenerCheques
+    obtenerCheques,
+    eliminarIngreso,
+    eliminarEgreso,
+    editarIngreso,
+    editarEgreso
 };

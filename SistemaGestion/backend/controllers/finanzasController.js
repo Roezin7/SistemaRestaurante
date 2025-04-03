@@ -73,17 +73,25 @@ const obtenerResumen = async (req, res) => {
     try {
         const ingresos = await pool.query('SELECT SUM(monto) AS total FROM ingresos');
         const egresos = await pool.query('SELECT SUM(monto) AS total FROM egresos');
+        const chequesPendientes = await pool.query("SELECT COUNT(*) AS cantidad FROM cheques WHERE estado = 'Pendiente'");
 
         const totalIngresos = parseFloat(ingresos.rows[0].total) || 0;
         const totalEgresos = parseFloat(egresos.rows[0].total) || 0;
+        const totalChequesPendientes = parseInt(chequesPendientes.rows[0].cantidad) || 0;
         const balance = totalIngresos - totalEgresos;
 
-        res.status(200).json({ ingresos: totalIngresos, egresos: totalEgresos, balance });
+        res.status(200).json({
+            ingresos: totalIngresos,
+            egresos: totalEgresos,
+            balance,
+            chequesPendientes: totalChequesPendientes
+        });
     } catch (error) {
         console.error('❌ Error al obtener resumen financiero:', error);
         res.status(500).json({ message: 'Error al obtener resumen financiero' });
     }
 };
+
 
 const obtenerMovimientos = async (req, res) => {
     try {

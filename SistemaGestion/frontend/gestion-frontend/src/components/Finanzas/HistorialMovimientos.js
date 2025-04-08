@@ -13,7 +13,12 @@ const HistorialMovimientos = () => {
         const obtenerMovimientos = async () => {
             try {
                 const response = await axios.get(`/finanzas/movimientos?filtro=${filtro}`);
-                setMovimientos(response.data);
+                // Corregir ID para ingresos (ingreso_id → id)
+                const movimientosMapeados = response.data.map(m => ({
+                    ...m,
+                    id: m.id || m.ingreso_id || m.egreso_id // asegúrate de tener campo uniforme
+                }));
+                setMovimientos(movimientosMapeados);
             } catch (error) {
                 console.error('Error al cargar movimientos:', error);
             }
@@ -24,8 +29,8 @@ const HistorialMovimientos = () => {
     const eliminarMovimiento = async (mov) => {
         if (window.confirm('¿Estás seguro de eliminar este movimiento?')) {
             try {
-                const tabla = mov.tipo === 'Ingreso' ? 'ingresos' : 'egresos';
-                await axios.delete(`/finanzas/${tabla}/${mov.id}`);
+                const tabla = mov.tipo.toLowerCase() === 'ingreso' ? 'ingresos' : 'egresos';
+                await axios.delete(`/finanzas/${tabla}/${mov.id}`); // ✅ Ruta corregida
                 setMovimientos(prev => prev.filter(m => m.id !== mov.id));
             } catch (error) {
                 console.error('❌ Error al eliminar movimiento:', error);

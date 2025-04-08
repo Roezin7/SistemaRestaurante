@@ -26,23 +26,21 @@ const registrarEgreso = async (req, res) => {
     }
 
     try {
-        // Registro de egreso
         await pool.query(
             `INSERT INTO egresos (concepto, monto, fecha, metodo_pago) 
-            VALUES ($1, $2, $3, $4)`,
+             VALUES ($1, $2, $3, $4)`,
             [concepto, monto, fecha, metodo_pago]
         );
 
-        // Si el método de pago es cheque, registrar en la tabla de cheques
-        if (metodo_pago === 'cheque') {
+        if (metodo_pago === 'cheque' && beneficiario && numero_cheque) {
             await pool.query(
                 `INSERT INTO cheques (monto, fecha, beneficiario, concepto, numero_cheque, estado) 
-                VALUES ($1, $2, $3, $4, $5, 'Pendiente')`,
+                 VALUES ($1, $2, $3, $4, $5, 'Pendiente')`,
                 [monto, fecha, beneficiario, concepto, numero_cheque]
             );
         }
 
-        res.status(201).json({ message: 'Egreso registrado exitosamente' });
+        res.status(201).json({ message: 'Egreso registrado correctamente' });
     } catch (error) {
         console.error('❌ Error al registrar egreso:', error);
         res.status(500).json({ message: 'Error al registrar egreso' });
@@ -94,6 +92,19 @@ const obtenerResumen = async (req, res) => {
 
 const obtenerMovimientos = async (req, res) => {
     try {
+        const { filtro } = req.query;
+
+        let fechaInicio = "1970-01-01"; // por defecto todo
+        const hoy = new Date();
+
+        if (filtro === 'diario') {
+            fechaInicio = new Date(hoy.setDate(hoy.getDate() - 1)).toISOString().split('T')[0];
+        } else if (filtro === 'semanal') {
+            fechaInicio = new Date(hoy.setDate(hoy.getDate() - 7)).toISOString().split('T')[0];
+        } else if (filtro === 'mensual') {
+            fechaInicio = new Date(hoy.setMonth(hoy.getMonth() - 1)).toISOString().split('T')[0];
+        }
+
         const result = await pool.query(`
             SELECT 
                 ingreso_id AS id,
@@ -105,6 +116,7 @@ const obtenerMovimientos = async (req, res) => {
                 NULL AS beneficiario, 
                 NULL AS numero_cheque
             FROM ingresos
+            WHERE fecha >= $1
 
             UNION ALL
 
@@ -119,9 +131,11 @@ const obtenerMovimientos = async (req, res) => {
                 c.numero_cheque
             FROM egresos e
             LEFT JOIN cheques c ON e.concepto = c.concepto
+            WHERE e.fecha >= $1
 
             ORDER BY fecha DESC;
-        `);
+        `, [fechaInicio]);
+
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('❌ Error al obtener movimientos:', error);
@@ -143,12 +157,13 @@ const eliminarIngreso = async (req, res) => {
     const { id } = req.params;
     try {
         await pool.query('DELETE FROM ingresos WHERE ingreso_id = $1', [id]);
-        res.status(200).json({ message: 'Ingreso eliminado correctamente' });
+        res.status(200).json({ mensaje: 'Ingreso eliminado correctamente' });
     } catch (error) {
-        console.error('❌ Error al eliminar ingreso:', error);
-        res.status(500).json({ message: 'Error al eliminar ingreso' });
+      console.error('Error al eliminar ingreso:', error);
+      res.status(500).json({ error: 'Error al eliminar ingreso' });
     }
-};
+  };  
+  
 
 const eliminarEgreso = async (req, res) => {
     try {
@@ -156,7 +171,7 @@ const eliminarEgreso = async (req, res) => {
         await pool.query('DELETE FROM egresos WHERE egreso_id = $1', [id]);
         res.status(200).json({ message: 'Egreso eliminado correctamente' });
     } catch (error) {
-        console.error('❌ Error al eliminar egreso:', error);
+        console.error('Error al eliminar egreso:', error);
         res.status(500).json({ message: 'Error al eliminar egreso' });
     }
 };
@@ -200,6 +215,23 @@ const editarEgreso = async (req, res) => {
     }
 };
 
+const actualizarEstadoCheque = async (req, res) => {
+    const { id } = req.params;
+    const { estado } = req.body;
+
+    try {
+        await pool.query(
+            'UPDATE cheques SET estado = $1 WHERE cheque_id = $2',
+            [estado, id]
+        );
+        res.status(200).json({ message: 'Estado del cheque actualizado' });
+    } catch (error) {
+        console.error('❌ Error al actualizar estado del cheque:', error);
+        res.status(500).json({ message: 'Error al actualizar estado del cheque' });
+    }
+};
+
+
 module.exports = {
     registrarIngreso,
     registrarEgreso,
@@ -211,5 +243,6 @@ module.exports = {
     eliminarIngreso,
     eliminarEgreso,
     editarIngreso,
-    editarEgreso
+    editarEgreso,
+    actualizarEstadoCheque
 };

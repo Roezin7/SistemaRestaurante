@@ -11,7 +11,8 @@ const {
     eliminarIngreso,
     eliminarEgreso,
     editarIngreso,
-    editarEgreso
+    editarEgreso,
+    actualizarEstadoCheque
 } = require('../controllers/finanzasController');
 
 // Ruta de ingresos
@@ -36,5 +37,7 @@ router.get('/movimientos', obtenerMovimientos);
 
 // Ruta para obtener los cheques
 router.get('/cheques', obtenerCheques);
+router.put('/cheques/:id', actualizarEstadoCheque);
+
 
 module.exports = router;

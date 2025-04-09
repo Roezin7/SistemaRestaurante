@@ -1,42 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import axios from '../api/axios';
+import React, { useState } from 'react';
+import Productos from '../components/Inventarios/Productos';
+import Proveedores from '../components/Inventarios/Proveedores';
+import DetalleProveedor from '../components/Inventarios/DetalleProveedor';
 
 const Inventario = () => {
-    const [productos, setProductos] = useState([]);
+  const [vista, setVista] = useState('productos'); // 'productos' | 'proveedores' | 'detalle'
+  const [proveedorActual, setProveedorActual] = useState(null);
 
-    useEffect(() => {
-        axios.get('/inventario')
-            .then(response => setProductos(response.data))
-            .catch(error => console.error(error));
-    }, []);
+  const verProveedor = (id) => {
+    setProveedorActual(id);
+    setVista('detalle');
+  };
 
-    return (
-        <div>
-            <h3>Inventario</h3>
-            <table className="table">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Categoría</th>
-                        <th>Cantidad</th>
-                        <th>Costo Unitario</th>
-                        <th>Precio Venta</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {productos.map(producto => (
-                        <tr key={producto.inventario_id}>
-                            <td>{producto.nombre}</td>
-                            <td>{producto.categoria}</td>
-                            <td>{producto.cantidad}</td>
-                            <td>${producto.costo_unitario}</td>
-                            <td>${producto.precio_venta}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+  const verProductos = () => setVista('productos');
+  const verProveedores = () => setVista('proveedores');
+  const volver = () => {
+    setProveedorActual(null);
+    setVista('proveedores');
+  };
+
+  return (
+    <div className="container mt-4 fade-in">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2 className="text-light">Inventario</h2>
+        <div className="btn-group">
+          <button className="btn btn-outline-light" onClick={verProductos}>Productos</button>
+          <button className="btn btn-outline-light" onClick={verProveedores}>Proveedores</button>
         </div>
-    );
+      </div>
+
+      {vista === 'productos' && <Productos onVerProveedor={verProveedor} />}
+      {vista === 'proveedores' && <Proveedores onVerProductos={verProveedor} />}
+      {vista === 'detalle' && proveedorActual && <DetalleProveedor proveedorId={proveedorActual} onVolver={volver} />}
+    </div>
+  );
 };
 
 export default Inventario;

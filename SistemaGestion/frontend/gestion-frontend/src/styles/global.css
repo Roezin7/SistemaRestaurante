@@ -260,39 +260,39 @@ button,
 
 .btn-primary {
   background-color: var(--color-accent);
-  color: #fff;
+  color: #fff !important; 
 }
 
 .btn-primary:hover {
   background-color: var(--color-accent-hover);
-  color: #fff;
+  color: #fff !important; 
 }
 
 .btn-danger {
-  background-color: #c62828;
-  color: #fff;
+  background-color: #c62828 !important; 
+  color: #fff !important; 
 }
 
 .btn-danger:hover {
-  background-color: #a31919;
+  background-color: #a31919 !important; 
 }
 
 .btn-success {
-  background-color: #2e7d32;
-  color: #fff;
+  background-color: #2e7d32 !important; 
+  color: #fff !important; 
 }
 
 .btn-success:hover {
-  background-color: #1b5e20;
+  background-color: #1b5e20 !important; 
 }
 
 .btn-warning {
-  background-color: #f9a825;
-  color: #000;
+  background-color: #f9a825 !important;  
+  color: #000 !important; 
 }
 
 .btn-warning:hover {
-  background-color: #fbc02d;
+  background-color: #fbc02d !important; 
 }
 
 .btn-outline-light {

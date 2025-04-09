@@ -155,26 +155,26 @@ const HorariosTable = () => {
                     ))}
                 </Form.Select>
             </Form.Group>
-
-            <Table striped bordered hover responsive>
+            <Table striped bordered hover responsive className="table table-dark table-hover text-center rounded">
                 <thead>
-                    <tr>
-                        {diasSemana.map((dia) => (
-                            <th key={dia}>{dia}</th>
-                        ))}
-                    </tr>
+                <tr>
+                    {diasSemana.map((dia) => (
+                    <th key={dia}>{dia}</th>
+                    ))}
+                </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        {diasSemana.map((dia) => (
-                            <td key={dia} style={{ verticalAlign: 'top' }}>
-                                {filtrarHorariosPorDia(dia)}
-                            </td>
-                        ))}
-                    </tr>
+                <tr>
+                    {diasSemana.map((dia) => (
+                    <td key={dia} style={{ verticalAlign: 'top' }}>
+                        {filtrarHorariosPorDia(dia)}
+                    </td>
+                    ))}
+                </tr>
                 </tbody>
             </Table>
-        </div>
+            </div>
+
     );
 };
 

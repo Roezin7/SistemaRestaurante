@@ -55,7 +55,7 @@ const FormularioMovimiento = () => {
             <div className="mb-3">
               <label className="form-label">Tipo</label>
               <select
-                className="form-select bg-secondary text-light"
+                className="form-select bg-dark text-light"
                 value={tipo}
                 onChange={(e) => setTipo(e.target.value)}
               >
@@ -67,7 +67,7 @@ const FormularioMovimiento = () => {
               <label className="form-label">Concepto</label>
               <input
                 type="text"
-                className="form-control bg-secondary text-light"
+                className="form-control bg-dark text-light"
                 value={concepto}
                 onChange={(e) => setConcepto(e.target.value)}
               />
@@ -76,7 +76,7 @@ const FormularioMovimiento = () => {
               <label className="form-label">Monto</label>
               <input
                 type="number"
-                className="form-control bg-secondary text-light"
+                className="form-control bg-dark text-light"
                 value={monto}
                 onChange={(e) => setMonto(e.target.value)}
               />
@@ -85,7 +85,7 @@ const FormularioMovimiento = () => {
               <label className="form-label">Fecha</label>
               <input
                 type="date"
-                className="form-control bg-secondary text-light"
+                className="form-control bg-dark text-light"
                 value={fecha}
                 onChange={(e) => setFecha(e.target.value)}
               />
@@ -93,7 +93,7 @@ const FormularioMovimiento = () => {
             <div className="mb-3">
               <label className="form-label">Método de Pago</label>
               <select
-                className="form-select bg-secondary text-light"
+                className="form-select bg-dark text-light"
                 value={metodoPago}
                 onChange={(e) => setMetodoPago(e.target.value)}
               >
@@ -108,7 +108,7 @@ const FormularioMovimiento = () => {
                   <label className="form-label">Beneficiario</label>
                   <input
                     type="text"
-                    className="form-control bg-secondary text-light"
+                    className="form-control bg-dark text-light"
                     value={beneficiario}
                     onChange={(e) => setBeneficiario(e.target.value)}
                   />
@@ -117,7 +117,7 @@ const FormularioMovimiento = () => {
                   <label className="form-label">Número de Cheque</label>
                   <input
                     type="text"
-                    className="form-control bg-secondary text-light"
+                    className="form-control bg-dark text-light"
                     value={numeroCheque}
                     onChange={(e) => setNumeroCheque(e.target.value)}
                   />

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../../api/axios';
-import './ResumenDiario.css'; // Asegúrate de tener este CSS para los KPIs
+import './ResumenDiario.css';
 
-const ResumenDiario = () => {
+const ResumenDiario = ({ filtro, fechaInicio, fechaFin }) => {
     const [resumen, setResumen] = useState({
         ingresos: 0,
         egresos: 0,
@@ -13,7 +13,7 @@ const ResumenDiario = () => {
     useEffect(() => {
         const obtenerResumen = async () => {
             try {
-                const response = await axios.get('/finanzas/resumen');
+                const response = await axios.get('/finanzas/resumen', { params: { filtro, fechaInicio, fechaFin } });
                 setResumen(response.data);
             } catch (error) {
                 console.error('❌ Error al obtener resumen diario:', error);
@@ -21,7 +21,7 @@ const ResumenDiario = () => {
         };
 
         obtenerResumen();
-    }, []);
+    }, [filtro, fechaInicio, fechaFin]);
 
     const formatter = new Intl.NumberFormat('es-MX', {
         style: 'currency',

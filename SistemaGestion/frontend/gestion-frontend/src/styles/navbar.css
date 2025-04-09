@@ -6,8 +6,7 @@
 
 .custom-brand {
     font-weight: 700;
-    font-size: 28px;
-    color: #FFFFFF !important;
+    font-size: 28px !important; /* antes: 28px */
     letter-spacing: 1px;
     transition: color 0.3s ease;
 }
@@ -17,7 +16,8 @@
 }
 
 .custom-link {
-    font-size: 16px;
+
+    font-size: 20px !important;
     margin-left: 18px;
     color: #FFFFFF !important;
     position: relative;
@@ -40,5 +40,62 @@
 }
 
 .custom-link:hover::after {
+    width: 100%;
+}
+
+
+/* ========== UNIFICACIÃ“N DE ESTILO OSCURO MODERNO ========== */
+:root {
+    --color-bg: #121212;
+    --color-card: #1E1E1E;
+    --color-surface: #252525;
+    --color-border: #2A2A2A;
+    --color-text: #CCCCCC;
+    --color-heading: #FFFFFF;
+    --color-accent: #6200EA;
+    --color-accent-hover: #3700B3;
+    --color-highlight: #BB86FC;
+}
+
+/* ========== ANIMACIONES UNIFICADAS ========== */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out both;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== ENTRADAS Y FOCUSED ========== */
+input, select, button, textarea {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    padding: 10px;
+    margin: 5px 0;
+    transition: border 0.3s, background-color 0.3s;
+}
+input:focus, select:focus, button:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-highlight);
+    box-shadow: 0 0 5px rgba(187, 134, 252, 0.5);
+}
+
+/* ========== BOTONES PERSONALIZADOS ========== */
+.btn-outline-light {
+    background-color: transparent;
+    border: 1px solid #888;
+    color: #FFFFFF;
+}
+.btn-outline-light:hover {
+    background-color: #333;
+    border-color: var(--color-highlight);
+    color: var(--color-highlight);
+}
+
+/* ========== RESPONSIVE TABLES ========== */
+.table-responsive {
+    overflow-x: auto;
     width: 100%;
 }

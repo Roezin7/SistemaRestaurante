@@ -69,87 +69,144 @@ const obtenerEgresos = async (req, res) => {
 
 const obtenerResumen = async (req, res) => {
     try {
-        const ingresos = await pool.query('SELECT SUM(monto) AS total FROM ingresos');
-        const egresos = await pool.query('SELECT SUM(monto) AS total FROM egresos');
-        const chequesPendientes = await pool.query("SELECT COUNT(*) AS cantidad FROM cheques WHERE estado = 'Pendiente'");
-
-        const totalIngresos = parseFloat(ingresos.rows[0].total) || 0;
-        const totalEgresos = parseFloat(egresos.rows[0].total) || 0;
-        const totalChequesPendientes = parseInt(chequesPendientes.rows[0].cantidad) || 0;
-        const balance = totalIngresos - totalEgresos;
-
-        res.status(200).json({
-            ingresos: totalIngresos,
-            egresos: totalEgresos,
-            balance,
-            chequesPendientes: totalChequesPendientes
-        });
+      const { filtro, fechaInicio, fechaFin } = req.query;
+  
+      let whereFecha = "1=1";
+      const params = [];
+  
+      if (filtro === 'personalizado' && fechaInicio && fechaFin) {
+        whereFecha = "fecha BETWEEN $1 AND $2";
+        params.push(fechaInicio, fechaFin);
+      } else {
+        let inicio = "1970-01-01";
+        const hoy = new Date();
+        if (filtro === 'diario') {
+          inicio = new Date().toISOString().split('T')[0];
+        } else if (filtro === 'semanal') {
+          inicio = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        } else if (filtro === 'mensual') {
+          inicio = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0];
+        }
+        whereFecha = "fecha >= $1";
+        params.push(inicio);
+      }
+  
+      const ingresos = await pool.query(`SELECT SUM(monto) AS total FROM ingresos WHERE ${whereFecha}`, params);
+      const egresos = await pool.query(`SELECT SUM(monto) AS total FROM egresos WHERE ${whereFecha}`, params);
+      const chequesPendientes = await pool.query(`SELECT COUNT(*) AS cantidad FROM cheques WHERE estado = 'Pendiente' AND ${whereFecha}`, params);
+  
+      const totalIngresos = parseFloat(ingresos.rows[0].total) || 0;
+      const totalEgresos = parseFloat(egresos.rows[0].total) || 0;
+      const totalChequesPendientes = parseInt(chequesPendientes.rows[0].cantidad) || 0;
+      const balance = totalIngresos - totalEgresos;
+  
+      res.status(200).json({
+        ingresos: totalIngresos,
+        egresos: totalEgresos,
+        balance,
+        chequesPendientes: totalChequesPendientes
+      });
     } catch (error) {
-        console.error('❌ Error al obtener resumen financiero:', error);
-        res.status(500).json({ message: 'Error al obtener resumen financiero' });
+      console.error('❌ Error al obtener resumen financiero:', error);
+      res.status(500).json({ message: 'Error al obtener resumen financiero' });
     }
-};
+};  
 
 const obtenerMovimientos = async (req, res) => {
     try {
-        const { filtro } = req.query;
-
-        let fechaInicio = "1970-01-01"; // por defecto todo
+      const { filtro, fechaInicio, fechaFin } = req.query;
+  
+      let whereClause = '';
+      const params = [];
+  
+      if (filtro === 'personalizado' && fechaInicio && fechaFin) {
+        whereClause = `fecha BETWEEN $1 AND $2`;
+        params.push(fechaInicio, fechaFin);
+      } else {
+        let inicio = '1970-01-01';
         const hoy = new Date();
-
         if (filtro === 'diario') {
-            fechaInicio = new Date(hoy.setDate(hoy.getDate() - 1)).toISOString().split('T')[0];
+          inicio = new Date().toISOString().split('T')[0];
         } else if (filtro === 'semanal') {
-            fechaInicio = new Date(hoy.setDate(hoy.getDate() - 7)).toISOString().split('T')[0];
+          inicio = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         } else if (filtro === 'mensual') {
-            fechaInicio = new Date(hoy.setMonth(hoy.getMonth() - 1)).toISOString().split('T')[0];
+          inicio = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0];
         }
-
-        const result = await pool.query(`
-            SELECT 
-                ingreso_id AS id,
-                'ingreso' AS tipo, 
-                concepto, 
-                monto, 
-                fecha, 
-                metodo_pago, 
-                NULL AS beneficiario, 
-                NULL AS numero_cheque
-            FROM ingresos
-            WHERE fecha >= $1
-
-            UNION ALL
-
-            SELECT 
-                egreso_id AS id,
-                'egreso' AS tipo, 
-                e.concepto, 
-                e.monto, 
-                e.fecha, 
-                e.metodo_pago, 
-                c.beneficiario, 
-                c.numero_cheque
-            FROM egresos e
-            LEFT JOIN cheques c ON e.concepto = c.concepto
-            WHERE e.fecha >= $1
-
-            ORDER BY fecha DESC;
-        `, [fechaInicio]);
-
-        res.status(200).json(result.rows);
+        whereClause = `fecha >= $1`;
+        params.push(inicio);
+      }
+  
+      const ingresosWhere = `ingresos.${whereClause}`;
+      const egresosWhere = `e.${whereClause}`;
+  
+      const query = `
+        SELECT 
+            ingreso_id AS id,
+            'ingreso' AS tipo, 
+            concepto, 
+            monto, 
+            fecha, 
+            metodo_pago, 
+            NULL AS beneficiario, 
+            NULL AS numero_cheque
+        FROM ingresos
+        WHERE ${ingresosWhere}
+  
+        UNION ALL
+  
+        SELECT 
+            egreso_id AS id,
+            'egreso' AS tipo, 
+            e.concepto, 
+            e.monto, 
+            e.fecha, 
+            e.metodo_pago, 
+            c.beneficiario, 
+            c.numero_cheque
+        FROM egresos e
+        LEFT JOIN cheques c ON e.concepto = c.concepto
+        WHERE ${egresosWhere}
+  
+        ORDER BY fecha DESC;
+      `;
+  
+      const result = await pool.query(query, params);
+      res.status(200).json(result.rows);
     } catch (error) {
-        console.error('❌ Error al obtener movimientos:', error);
-        res.status(500).json({ message: 'Error al obtener movimientos' });
+      console.error('❌ Error al obtener movimientos:', error);
+      res.status(500).json({ message: 'Error al obtener movimientos' });
     }
-};
+};  
 
 const obtenerCheques = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM cheques');
-        res.status(200).json(result.rows);
+      const { filtro, fechaInicio, fechaFin } = req.query;
+  
+      let whereFecha = "1=1";
+      const params = [];
+  
+      if (filtro === 'personalizado' && fechaInicio && fechaFin) {
+        whereFecha = "cheques.fecha BETWEEN $1 AND $2";
+        params.push(fechaInicio, fechaFin);
+      } else {
+        let inicio = "1970-01-01";
+        const hoy = new Date();
+        if (filtro === 'diario') {
+          inicio = new Date().toISOString().split('T')[0];
+        } else if (filtro === 'semanal') {
+          inicio = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        } else if (filtro === 'mensual') {
+          inicio = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0];
+        }
+        whereFecha = "cheques.fecha >= $1";
+        params.push(inicio);
+      }
+  
+      const result = await pool.query(`SELECT * FROM cheques WHERE ${whereFecha}`, params);
+      res.status(200).json(result.rows);
     } catch (error) {
-        console.error('❌ Error al obtener cheques:', error);
-        res.status(500).json({ message: 'Error al obtener cheques' });
+      console.error('❌ Error al obtener cheques:', error);
+      res.status(500).json({ message: 'Error al obtener cheques' });
     }
 };
 
@@ -162,14 +219,19 @@ const eliminarIngreso = async (req, res) => {
       console.error('Error al eliminar ingreso:', error);
       res.status(500).json({ error: 'Error al eliminar ingreso' });
     }
-  };  
+};  
   
-
 const eliminarEgreso = async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Eliminar el cheque asociado al egreso (si existe)
+        await pool.query('DELETE FROM cheques WHERE concepto = (SELECT concepto FROM egresos WHERE egreso_id = $1)', [id]);
+
+        // Luego eliminar el egreso
         await pool.query('DELETE FROM egresos WHERE egreso_id = $1', [id]);
-        res.status(200).json({ message: 'Egreso eliminado correctamente' });
+
+        res.status(200).json({ message: 'Egreso y cheque asociados eliminados correctamente' });
     } catch (error) {
         console.error('Error al eliminar egreso:', error);
         res.status(500).json({ message: 'Error al eliminar egreso' });

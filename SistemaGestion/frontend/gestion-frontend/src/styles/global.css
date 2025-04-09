@@ -188,3 +188,140 @@ input:focus, select:focus, button:focus, textarea:focus {
 }
 
 /* ========== KPIs ========== */
+
+
+/* ========== UNIFICACIÃ“N DE ESTILO OSCURO MODERNO ========== */
+:root {
+    --color-bg: #121212;
+    --color-card: #1E1E1E;
+    --color-surface: #252525;
+    --color-border: #2A2A2A;
+    --color-text: #CCCCCC;
+    --color-heading: #FFFFFF;
+    --color-accent: #6200EA;
+    --color-accent-hover: #3700B3;
+    --color-highlight: #BB86FC;
+}
+
+/* ========== ANIMACIONES UNIFICADAS ========== */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out both;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== ENTRADAS Y FOCUSED ========== */
+input, select, button, textarea {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    padding: 10px;
+    margin: 5px 0;
+    transition: border 0.3s, background-color 0.3s;
+}
+input:focus, select:focus, button:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-highlight);
+    box-shadow: 0 0 5px rgba(187, 134, 252, 0.5);
+}
+
+/* ========== BOTONES PERSONALIZADOS ========== */
+.btn-outline-light {
+    background-color: transparent;
+    border: 1px solid #888;
+    color: #FFFFFF;
+}
+.btn-outline-light:hover {
+    background-color: #333;
+    border-color: var(--color-highlight);
+    color: var(--color-highlight);
+}
+
+/* ========== RESPONSIVE TABLES ========== */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* ========== BOTONES UNIFICADOS ========== */
+button,
+.btn {
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+  color: #fff;
+}
+
+.btn-danger {
+  background-color: #c62828;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background-color: #a31919;
+}
+
+.btn-success {
+  background-color: #2e7d32;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background-color: #1b5e20;
+}
+
+.btn-warning {
+  background-color: #f9a825;
+  color: #000;
+}
+
+.btn-warning:hover {
+  background-color: #fbc02d;
+}
+
+.btn-outline-light {
+  background-color: transparent;
+  border: 1px solid #ccc;
+  color: #fff;
+}
+
+.btn-outline-light:hover {
+  background-color: #333;
+  color: var(--color-highlight);
+  border-color: var(--color-highlight);
+}
+
+.btn-secondary {
+  background-color: #555;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background-color: #666;
+}
+
+.btn-sm {
+  font-size: 14px;
+  padding: 6px 12px;
+}
+
+.btn-lg {
+  font-size: 18px;
+  padding: 12px 20px;
+}

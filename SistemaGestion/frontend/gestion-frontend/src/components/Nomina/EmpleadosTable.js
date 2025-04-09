@@ -97,7 +97,7 @@ const EmpleadosTable = () => {
             <tr>
               <th>Nombre</th>
               <th>Puesto</th>
-              <th>Salario quincenal</th>
+              <th>Salario mensual</th>
               <th>Acciones</th>
             </tr>
           </thead>

@@ -13,6 +13,7 @@ app.use('/api/empleados', require('./routes/empleadosRoutes'));
 app.use('/api/finanzas', require('./routes/finanzasRoutes'));
 app.use('/api/inventarios', require('./routes/inventarioRoutes'));
 app.use('/api/horarios', require('./routes/horariosRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 
 // Ruta de prueba
 app.get('/api', (req, res) => {

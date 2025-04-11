@@ -7,7 +7,7 @@ import FiltroGlobal from '../components/Finanzas/FiltroGlobal';
 import '../styles/global.css';
 
 const Finanzas = () => {
-  const [filtro, setFiltro] = useState('diario');
+  const [filtro, setFiltro] = useState('mensual');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
 

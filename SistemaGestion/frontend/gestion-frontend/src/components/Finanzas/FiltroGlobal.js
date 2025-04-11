@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FiltroGlobal = ({ filtro, setFiltro, fechaInicio, setFechaInicio, fechaFin, setFechaFin }) => {
+const FiltroGlobal = ({ filtro = 'mensual', setFiltro, fechaInicio, setFechaInicio, fechaFin, setFechaFin }) => {
   return (
     <div className="card bg-dark text-light mb-3">
       <div className="card-body d-flex flex-wrap gap-3 align-items-end">

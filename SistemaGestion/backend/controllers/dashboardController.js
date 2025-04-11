@@ -1,31 +1,34 @@
 const pool = require('../config/db');
 
 const obtenerResumenDashboard = async (req, res) => {
-  try {
-    const hoy = new Date().toISOString().split('T')[0];
-
-    const [ingresos, egresos, chequesPend, empleados, productosSinProveedor] = await Promise.all([
-      pool.query("SELECT COALESCE(SUM(monto), 0) AS total FROM ingresos WHERE fecha = $1", [hoy]),
-      pool.query("SELECT COALESCE(SUM(monto), 0) AS total FROM egresos WHERE fecha = $1", [hoy]),
-      pool.query("SELECT COUNT(*) AS cantidad FROM cheques WHERE estado = 'Pendiente'"),
-      pool.query("SELECT COUNT(*) AS total, COALESCE(SUM(salario),0) AS nomina FROM empleados"),
-      pool.query("SELECT COUNT(*) AS sin_proveedor FROM productos WHERE proveedor_id IS NULL")
-    ]);
-
-    res.json({
-      ingresosHoy: parseFloat(ingresos.rows[0].total),
-      egresosHoy: parseFloat(egresos.rows[0].total),
-      balanceHoy: parseFloat(ingresos.rows[0].total) - parseFloat(egresos.rows[0].total),
-      chequesPendientes: parseInt(chequesPend.rows[0].cantidad),
-      totalEmpleados: parseInt(empleados.rows[0].total),
-      totalNomina: parseFloat(empleados.rows[0].nomina),
-      productosSinProveedor: parseInt(productosSinProveedor.rows[0].sin_proveedor)
-    });
-  } catch (error) {
-    console.error("Error al obtener resumen del dashboard:", error);
-    res.status(500).json({ error: "Error al obtener resumen del dashboard" });
-  }
-};
+    try {
+      const { desde, hasta } = req.query;
+  
+      const inicio = desde || new Date().toISOString().split('T')[0];
+      const fin = hasta || inicio;
+  
+      const [ingresos, egresos, chequesPend, empleados, productosSinProveedor] = await Promise.all([
+        pool.query("SELECT COALESCE(SUM(monto), 0) AS total FROM ingresos WHERE fecha BETWEEN $1 AND $2", [inicio, fin]),
+        pool.query("SELECT COALESCE(SUM(monto), 0) AS total FROM egresos WHERE fecha BETWEEN $1 AND $2", [inicio, fin]),
+        pool.query("SELECT COUNT(*) AS cantidad FROM cheques WHERE estado = 'Pendiente'"),
+        pool.query("SELECT COUNT(*) AS total, COALESCE(SUM(salario),0) AS nomina FROM empleados"),
+        pool.query("SELECT COUNT(*) AS sin_proveedor FROM productos WHERE proveedor_id IS NULL")
+      ]);
+  
+      res.json({
+        ingresos: parseFloat(ingresos.rows[0].total),
+        egresos: parseFloat(egresos.rows[0].total),
+        balance: parseFloat(ingresos.rows[0].total) - parseFloat(egresos.rows[0].total),
+        chequesPendientes: parseInt(chequesPend.rows[0].cantidad),
+        totalEmpleados: parseInt(empleados.rows[0].total),
+        totalNomina: parseFloat(empleados.rows[0].nomina),
+        productosSinProveedor: parseInt(productosSinProveedor.rows[0].sin_proveedor)
+      });
+    } catch (error) {
+      console.error("Error al obtener resumen del dashboard:", error);
+      res.status(500).json({ error: "Error al obtener resumen del dashboard" });
+    }
+  };
 
 const obtenerHistorico = async (req, res) => {
     const { desde, hasta } = req.query;

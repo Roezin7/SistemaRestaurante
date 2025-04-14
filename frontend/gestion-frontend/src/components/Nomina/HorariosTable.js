@@ -3,7 +3,7 @@ import axios from '../../api/axios';
 import { Table, Button, Form } from 'react-bootstrap';
 import dayjs from 'dayjs';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // sin destructuring
+import autoTable from 'jspdf-autotable';
 
 
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -80,58 +80,59 @@ const HorariosTable = () => {
                 </div>
             ));
     };
-
-  const exportarPDF = () => {
-    const doc = new jsPDF({ orientation: 'landscape' });
-
-    const semana = semanas.find(s => s.semana_id === semanaSeleccionada);
-    const titulo = semana
+    
+    const exportarPDF = () => {
+      const doc = new jsPDF({ orientation: 'landscape' });
+    
+      const semana = semanas.find(s => s.semana_id === semanaSeleccionada);
+      const titulo = semana
         ? `Semana ${semana.numero_semana}: ${dayjs(semana.fecha_inicio).format('DD MMM YYYY')} al ${dayjs(semana.fecha_fin).format('DD MMM YYYY')}`
         : 'Horario Semanal';
-
-    doc.setFontSize(16);
-    doc.text('Horario Semanal', 14, 15);
-
-    doc.setFontSize(12);
-    doc.text(titulo, 14, 23);
-
-    const diasConHorarios = {};
-    diasSemana.forEach(dia => {
+    
+      doc.setFontSize(16);
+      doc.text('Horario Semanal', 14, 15);
+    
+      doc.setFontSize(12);
+      doc.text(titulo, 14, 23);
+    
+      const diasConHorarios = {};
+      diasSemana.forEach(dia => {
         diasConHorarios[dia] = horarios
-            .filter(h => h.dia === dia)
-            .sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio))
-            .map(h => `${h.nombre.toUpperCase()}\n${h.hora_inicio.slice(0, 5)} - ${h.hora_fin.slice(0, 5)}`);
-    });
-
-    const maxFilas = Math.max(...Object.values(diasConHorarios).map(arr => arr.length));
-    const body = [];
-
-    for (let i = 0; i < maxFilas; i++) {
+          .filter(h => h.dia === dia)
+          .sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio))
+          .map(h => `${h.nombre.toUpperCase()}\n${h.hora_inicio.slice(0, 5)} - ${h.hora_fin.slice(0, 5)}`);
+      });
+    
+      const maxFilas = Math.max(...Object.values(diasConHorarios).map(arr => arr.length));
+      const body = [];
+    
+      for (let i = 0; i < maxFilas; i++) {
         const fila = diasSemana.map(dia => diasConHorarios[dia][i] || '—');
         body.push(fila);
-    }
-
-    doc.autoTable({
+      }
+    
+      autoTable(doc, {
         head: [diasSemana],
         body,
         startY: 30,
         styles: {
-            halign: 'center',
-            valign: 'middle',
-            fontSize: 9,
-            cellPadding: 3
+          halign: 'center',
+          valign: 'middle',
+          fontSize: 9,
+          cellPadding: 3,
         },
         headStyles: {
-            fillColor: [33, 150, 243],
-            textColor: 255,
-            fontStyle: 'bold'
+          fillColor: [33, 150, 243],
+          textColor: 255,
+          fontStyle: 'bold',
         },
         theme: 'grid',
-        pageBreak: 'auto', // 👈 esto permite salto de página si es necesario
-    });
-
-    doc.save(`${titulo}.pdf`);
-};
+        pageBreak: 'auto',
+      });
+    
+      doc.save(`${titulo}.pdf`);
+    };
+    
     
     return (
         <div>

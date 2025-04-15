@@ -1,34 +1,26 @@
 import React from 'react';
+import { Navbar, Nav, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import '../styles/navbar.css';
 
 const NavBar = () => {
-    return (
-        <nav className="navbar navbar-expand-lg navbar-dark custom-navbar">
-            <div className="container">
-                <Link className="navbar-brand custom-brand" to="/">Los Mariachis</Link>
-                <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span className="navbar-toggler-icon"></span>
-                </button>
-                <div className="collapse navbar-collapse" id="navbarNav">
-                    <ul className="navbar-nav ms-auto">
-                        <li className="nav-item">
-                            <Link className="nav-link custom-link" to="/">Dashboard</Link>
-                        </li>
-                        <li className="nav-item">
-                            <Link className="nav-link custom-link" to="/inventario">Inventario</Link>
-                        </li>
-                        <li className="nav-item">
-                            <Link className="nav-link custom-link" to="/finanzas">Finanzas</Link>
-                        </li>
-                        <li className="nav-item">
-                            <Link className="nav-link custom-link" to="/nomina">Nómina</Link>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    );
+  return (
+    <Navbar bg="dark" variant="dark" expand="md" className="shadow-sm sticky-top">
+      <Container>
+        <Navbar.Brand as={Link} to="/" className="fs-5 fw-bold">
+          Sistema Restaurante
+        </Navbar.Brand>
+        <Navbar.Toggle aria-controls="nav-links" />
+        <Navbar.Collapse id="nav-links">
+          <Nav className="ms-auto">
+            <Nav.Link as={Link} to="/" className="mx-2">Dashboard</Nav.Link>
+            <Nav.Link as={Link} to="/finanzas" className="mx-2">Finanzas</Nav.Link>
+            <Nav.Link as={Link} to="/nomina" className="mx-2">Nómina</Nav.Link>
+            <Nav.Link as={Link} to="/inventario" className="mx-2">Inventario</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
+  );
 };
 
 export default NavBar;

@@ -7,7 +7,7 @@ const NavBar = () => {
     <Navbar bg="dark" variant="dark" expand="md" className="shadow-sm sticky-top">
       <Container>
         <Navbar.Brand as={Link} to="/" className="fs-5 fw-bold">
-          Sistema Restaurante
+          Los Mariachis
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="nav-links" />
         <Navbar.Collapse id="nav-links">

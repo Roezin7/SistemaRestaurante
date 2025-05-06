@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
-import FiltroGlobal from '../shared/FiltroGlobal';
+import FiltroGlobal from './FiltroGlobal';
 import dayjs from 'dayjs';
 
 const HistorialMovimientos = () => {

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
 import dayjs from 'dayjs';
 
-const HistorialMovimientos = ({ filtro, fechaInicio, fechaFin }) => {
+const HistorialMovimientos = () => {
   const [movimientos, setMovimientos] = useState([]);
+  const [filtro, setFiltro] = useState('diario');
   const [busqueda, setBusqueda] = useState('');
   const [modoEdicion, setModoEdicion] = useState(null);
   const [datosEditados, setDatosEditados] = useState({});
@@ -11,9 +12,7 @@ const HistorialMovimientos = ({ filtro, fechaInicio, fechaFin }) => {
   useEffect(() => {
     const obtenerMovimientos = async () => {
       try {
-        const response = await axios.get('/finanzas/movimientos', {
-          params: { filtro, fechaInicio, fechaFin },
-        });
+        const response = await axios.get(`/finanzas/movimientos?filtro=${filtro}`);
         const movimientosMapeados = response.data.map((m) => ({
           ...m,
           id: m.id || m.ingreso_id || m.egreso_id,
@@ -23,20 +22,9 @@ const HistorialMovimientos = ({ filtro, fechaInicio, fechaFin }) => {
         console.error('Error al cargar movimientos:', error);
       }
     };
-    obtenerMovimientos();
-  }, [filtro, fechaInicio, fechaFin]);
 
-  const eliminarMovimiento = async (mov) => {
-    if (window.confirm('¿Estás seguro de eliminar este movimiento?')) {
-      try {
-        const tabla = mov.tipo.toLowerCase() === 'ingreso' ? 'ingresos' : 'egresos';
-        await axios.delete(`/finanzas/${tabla}/${mov.id}`);
-        setMovimientos((prev) => prev.filter((m) => m.id !== mov.id));
-      } catch (error) {
-        console.error('❌ Error al eliminar movimiento:', error);
-      }
-    }
-  };
+    obtenerMovimientos();
+  }, [filtro]);
 
   const activarEdicion = (mov) => {
     setModoEdicion(mov.id);
@@ -63,19 +51,35 @@ const HistorialMovimientos = ({ filtro, fechaInicio, fechaFin }) => {
     }
   };
 
-  const movimientosFiltrados = movimientos.filter(
-    (mov) =>
-      mov.concepto.toLowerCase().includes(busqueda.toLowerCase()) ||
-      mov.metodo_pago.toLowerCase().includes(busqueda.toLowerCase()) ||
-      (mov.beneficiario || '').toLowerCase().includes(busqueda.toLowerCase()) ||
-      mov.tipo.toLowerCase().includes(busqueda.toLowerCase())
+  const eliminarMovimiento = async (mov) => {
+    if (window.confirm('¿Estás seguro de eliminar este movimiento?')) {
+      try {
+        const tabla = mov.tipo.toLowerCase() === 'ingreso' ? 'ingresos' : 'egresos';
+        await axios.delete(`/finanzas/${tabla}/${mov.id}`);
+        setMovimientos((prev) => prev.filter((m) => m.id !== mov.id));
+      } catch (error) {
+        console.error('❌ Error al eliminar movimiento:', error);
+      }
+    }
+  };
+
+  const movimientosFiltrados = movimientos.filter((mov) =>
+    mov.concepto.toLowerCase().includes(busqueda.toLowerCase()) ||
+    mov.metodo_pago.toLowerCase().includes(busqueda.toLowerCase()) ||
+    (mov.beneficiario || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+    mov.tipo.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
     <div className="card mt-4 fade-in">
       <div className="card-body">
-        <div className="mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-3">
           <h4 className="mb-0">Historial de Movimientos</h4>
+          <select className="form-select w-auto" value={filtro} onChange={(e) => setFiltro(e.target.value)}>
+            <option value="diario">Diario</option>
+            <option value="semanal">Semanal</option>
+            <option value="mensual">Mensual</option>
+          </select>
         </div>
 
         <input
@@ -103,10 +107,19 @@ const HistorialMovimientos = ({ filtro, fechaInicio, fechaFin }) => {
             <tbody>
               {movimientosFiltrados.map((mov) => (
                 <tr key={mov.id}>
-                  <td>{dayjs(mov.fecha).format('DD/MM/YYYY')}</td>
-                  <td>{mov.tipo}</td>
                   {modoEdicion === mov.id ? (
                     <>
+                      <td>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={dayjs(datosEditados.fecha).format('YYYY-MM-DD')}
+                          onChange={(e) =>
+                            setDatosEditados({ ...datosEditados, fecha: e.target.value })
+                          }
+                        />
+                      </td>
+                      <td>{mov.tipo}</td>
                       <td>
                         <input
                           className="form-control"
@@ -154,40 +167,22 @@ const HistorialMovimientos = ({ filtro, fechaInicio, fechaFin }) => {
                         />
                       </td>
                       <td>
-                        <button
-                          className="btn btn-success btn-sm me-1"
-                          onClick={guardarEdicion}
-                        >
-                          Guardar
-                        </button>
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={cancelarEdicion}
-                        >
-                          Cancelar
-                        </button>
+                        <button className="btn btn-success btn-sm me-1" onClick={guardarEdicion}>Guardar</button>
+                        <button className="btn btn-secondary btn-sm" onClick={cancelarEdicion}>Cancelar</button>
                       </td>
                     </>
                   ) : (
                     <>
+                      <td>{dayjs(mov.fecha).format('DD/MM/YYYY')}</td>
+                      <td>{mov.tipo}</td>
                       <td>{mov.concepto}</td>
                       <td>{mov.metodo_pago}</td>
                       <td>${parseFloat(mov.monto).toFixed(2)}</td>
                       <td>{mov.beneficiario || '-'}</td>
                       <td>{mov.numero_cheque || '-'}</td>
                       <td>
-                        <button
-                          className="btn btn-warning btn-sm me-1"
-                          onClick={() => activarEdicion(mov)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => eliminarMovimiento(mov)}
-                        >
-                          Eliminar
-                        </button>
+                        <button className="btn btn-warning btn-sm me-1" onClick={() => activarEdicion(mov)}>Editar</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => eliminarMovimiento(mov)}>Eliminar</button>
                       </td>
                     </>
                   )}

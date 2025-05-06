@@ -1,34 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
+import FiltroGlobal from '../shared/FiltroGlobal';
 import dayjs from 'dayjs';
 
 const HistorialMovimientos = () => {
   const [movimientos, setMovimientos] = useState([]);
-  const [filtro, setFiltro] = useState('diario');
   const [busqueda, setBusqueda] = useState('');
   const [modoEdicion, setModoEdicion] = useState(null);
   const [datosEditados, setDatosEditados] = useState({});
 
+  // Filtro global
+  const [filtro, setFiltro] = useState('mensual');
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
+
   useEffect(() => {
+    if (!fechaInicio || !fechaFin) return;
+
     const obtenerMovimientos = async () => {
       try {
-        const response = await axios.get(`/finanzas/movimientos?filtro=${filtro}`);
-        const movimientosMapeados = response.data.map((m) => ({
-          ...m,
-          id: m.id || m.ingreso_id || m.egreso_id,
-        }));
-        setMovimientos(movimientosMapeados);
+        const response = await axios.get(`/finanzas/movimientos?filtro=${filtro}&fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
+        setMovimientos(response.data);
       } catch (error) {
         console.error('Error al cargar movimientos:', error);
       }
     };
 
     obtenerMovimientos();
-  }, [filtro]);
+  }, [filtro, fechaInicio, fechaFin]);
+
+  const eliminarMovimiento = async (mov) => {
+    if (window.confirm('¿Estás seguro de eliminar este movimiento?')) {
+      try {
+        const tabla = mov.tipo === 'Ingreso' ? 'ingresos' : 'egresos';
+        await axios.delete(`/finanzas/${tabla}/${mov.id}`);
+        setMovimientos(prev => prev.filter(m => m.id !== mov.id));
+      } catch (error) {
+        console.error('❌ Error al eliminar movimiento:', error);
+      }
+    }
+  };
 
   const activarEdicion = (mov) => {
     setModoEdicion(mov.id);
-    setDatosEditados({ ...mov });
+    setDatosEditados({ ...mov, fecha: dayjs(mov.fecha).format('YYYY-MM-DD') });
   };
 
   const cancelarEdicion = () => {
@@ -51,18 +66,6 @@ const HistorialMovimientos = () => {
     }
   };
 
-  const eliminarMovimiento = async (mov) => {
-    if (window.confirm('¿Estás seguro de eliminar este movimiento?')) {
-      try {
-        const tabla = mov.tipo.toLowerCase() === 'ingreso' ? 'ingresos' : 'egresos';
-        await axios.delete(`/finanzas/${tabla}/${mov.id}`);
-        setMovimientos((prev) => prev.filter((m) => m.id !== mov.id));
-      } catch (error) {
-        console.error('❌ Error al eliminar movimiento:', error);
-      }
-    }
-  };
-
   const movimientosFiltrados = movimientos.filter((mov) =>
     mov.concepto.toLowerCase().includes(busqueda.toLowerCase()) ||
     mov.metodo_pago.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -73,14 +76,16 @@ const HistorialMovimientos = () => {
   return (
     <div className="card mt-4 fade-in">
       <div className="card-body">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4 className="mb-0">Historial de Movimientos</h4>
-          <select className="form-select w-auto" value={filtro} onChange={(e) => setFiltro(e.target.value)}>
-            <option value="diario">Diario</option>
-            <option value="semanal">Semanal</option>
-            <option value="mensual">Mensual</option>
-          </select>
-        </div>
+        <h4 className="mb-3">Historial de Movimientos</h4>
+
+        <FiltroGlobal
+          filtro={filtro}
+          setFiltro={setFiltro}
+          fechaInicio={fechaInicio}
+          setFechaInicio={setFechaInicio}
+          fechaFin={fechaFin}
+          setFechaFin={setFechaFin}
+        />
 
         <input
           type="text"
@@ -107,35 +112,33 @@ const HistorialMovimientos = () => {
             <tbody>
               {movimientosFiltrados.map((mov) => (
                 <tr key={mov.id}>
+                  <td>
+                    {modoEdicion === mov.id ? (
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={datosEditados.fecha}
+                        onChange={(e) => setDatosEditados({ ...datosEditados, fecha: e.target.value })}
+                      />
+                    ) : (
+                      dayjs(mov.fecha).format('DD/MM/YYYY')
+                    )}
+                  </td>
+                  <td>{mov.tipo}</td>
                   {modoEdicion === mov.id ? (
                     <>
                       <td>
                         <input
-                          type="date"
-                          className="form-control"
-                          value={dayjs(datosEditados.fecha).format('YYYY-MM-DD')}
-                          onChange={(e) =>
-                            setDatosEditados({ ...datosEditados, fecha: e.target.value })
-                          }
-                        />
-                      </td>
-                      <td>{mov.tipo}</td>
-                      <td>
-                        <input
                           className="form-control"
                           value={datosEditados.concepto}
-                          onChange={(e) =>
-                            setDatosEditados({ ...datosEditados, concepto: e.target.value })
-                          }
+                          onChange={(e) => setDatosEditados({ ...datosEditados, concepto: e.target.value })}
                         />
                       </td>
                       <td>
                         <input
                           className="form-control"
                           value={datosEditados.metodo_pago}
-                          onChange={(e) =>
-                            setDatosEditados({ ...datosEditados, metodo_pago: e.target.value })
-                          }
+                          onChange={(e) => setDatosEditados({ ...datosEditados, metodo_pago: e.target.value })}
                         />
                       </td>
                       <td>
@@ -143,27 +146,21 @@ const HistorialMovimientos = () => {
                           type="number"
                           className="form-control"
                           value={datosEditados.monto}
-                          onChange={(e) =>
-                            setDatosEditados({ ...datosEditados, monto: e.target.value })
-                          }
+                          onChange={(e) => setDatosEditados({ ...datosEditados, monto: e.target.value })}
                         />
                       </td>
                       <td>
                         <input
                           className="form-control"
                           value={datosEditados.beneficiario || ''}
-                          onChange={(e) =>
-                            setDatosEditados({ ...datosEditados, beneficiario: e.target.value })
-                          }
+                          onChange={(e) => setDatosEditados({ ...datosEditados, beneficiario: e.target.value })}
                         />
                       </td>
                       <td>
                         <input
                           className="form-control"
                           value={datosEditados.numero_cheque || ''}
-                          onChange={(e) =>
-                            setDatosEditados({ ...datosEditados, numero_cheque: e.target.value })
-                          }
+                          onChange={(e) => setDatosEditados({ ...datosEditados, numero_cheque: e.target.value })}
                         />
                       </td>
                       <td>
@@ -173,8 +170,6 @@ const HistorialMovimientos = () => {
                     </>
                   ) : (
                     <>
-                      <td>{dayjs(mov.fecha).format('DD/MM/YYYY')}</td>
-                      <td>{mov.tipo}</td>
                       <td>{mov.concepto}</td>
                       <td>{mov.metodo_pago}</td>
                       <td>${parseFloat(mov.monto).toFixed(2)}</td>

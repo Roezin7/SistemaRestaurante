@@ -1,31 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
-import FiltroGlobal from './FiltroGlobal';
 import dayjs from 'dayjs';
 
-const HistorialMovimientos = () => {
+const HistorialMovimientos = ({ filtro, fechaInicio, fechaFin }) => {
   const [movimientos, setMovimientos] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [modoEdicion, setModoEdicion] = useState(null);
   const [datosEditados, setDatosEditados] = useState({});
 
-  // Filtro global
-  const [filtro, setFiltro] = useState('mensual');
-  const [fechaInicio, setFechaInicio] = useState('');
-  const [fechaFin, setFechaFin] = useState('');
-
   useEffect(() => {
-    if (!fechaInicio || !fechaFin) return;
-
     const obtenerMovimientos = async () => {
       try {
-        const response = await axios.get(`/finanzas/movimientos?filtro=${filtro}&fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
-        setMovimientos(response.data);
+        const response = await axios.get('/finanzas/movimientos', {
+          params: { filtro, fechaInicio, fechaFin },
+        });
+
+        const movimientosMapeados = response.data.map((m) => ({
+          ...m,
+          id: m.id || m.ingreso_id || m.egreso_id,
+        }));
+
+        setMovimientos(movimientosMapeados);
       } catch (error) {
-        console.error('Error al cargar movimientos:', error);
+        console.error('❌ Error al cargar movimientos:', error);
       }
     };
-
     obtenerMovimientos();
   }, [filtro, fechaInicio, fechaFin]);
 
@@ -33,21 +32,18 @@ const HistorialMovimientos = () => {
     if (window.confirm('¿Estás seguro de eliminar este movimiento?')) {
       try {
         const tabla = mov.tipo.toLowerCase() === 'ingreso' ? 'ingresos' : 'egresos';
-        const id = mov.tipo.toLowerCase() === 'ingreso' ? mov.ingreso_id : mov.egreso_id;
-        await axios.delete(`/finanzas/${tabla}/${id}`);
-        setMovimientos(prev => prev.filter(m => {
-          const mid = m.tipo.toLowerCase() === 'ingreso' ? m.ingreso_id : m.egreso_id;
-          return mid !== id;
-        }));
+        await axios.delete(`/finanzas/${tabla}/${mov.id}`);
+        setMovimientos((prev) => prev.filter((m) => m.id !== mov.id));
       } catch (error) {
         console.error('❌ Error al eliminar movimiento:', error);
+        alert('Error al eliminar el movimiento');
       }
     }
-  };  
+  };
 
   const activarEdicion = (mov) => {
     setModoEdicion(mov.id);
-    setDatosEditados({ ...mov, fecha: dayjs(mov.fecha).format('YYYY-MM-DD') });
+    setDatosEditados({ ...mov });
   };
 
   const cancelarEdicion = () => {
@@ -80,16 +76,9 @@ const HistorialMovimientos = () => {
   return (
     <div className="card mt-4 fade-in">
       <div className="card-body">
-        <h4 className="mb-3">Historial de Movimientos</h4>
-
-        <FiltroGlobal
-          filtro={filtro}
-          setFiltro={setFiltro}
-          fechaInicio={fechaInicio}
-          setFechaInicio={setFechaInicio}
-          fechaFin={fechaFin}
-          setFechaFin={setFechaFin}
-        />
+        <div className="mb-3">
+          <h4 className="mb-0">Historial de Movimientos</h4>
+        </div>
 
         <input
           type="text"
@@ -116,18 +105,7 @@ const HistorialMovimientos = () => {
             <tbody>
               {movimientosFiltrados.map((mov) => (
                 <tr key={mov.id}>
-                  <td>
-                    {modoEdicion === mov.id ? (
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={datosEditados.fecha}
-                        onChange={(e) => setDatosEditados({ ...datosEditados, fecha: e.target.value })}
-                      />
-                    ) : (
-                      dayjs(mov.fecha).format('DD/MM/YYYY')
-                    )}
-                  </td>
+                  <td>{dayjs(mov.fecha).format('DD/MM/YYYY')}</td>
                   <td>{mov.tipo}</td>
                   {modoEdicion === mov.id ? (
                     <>
@@ -168,8 +146,12 @@ const HistorialMovimientos = () => {
                         />
                       </td>
                       <td>
-                        <button className="btn btn-success btn-sm me-1" onClick={guardarEdicion}>Guardar</button>
-                        <button className="btn btn-secondary btn-sm" onClick={cancelarEdicion}>Cancelar</button>
+                        <button className="btn btn-success btn-sm me-1" onClick={guardarEdicion}>
+                          Guardar
+                        </button>
+                        <button className="btn btn-secondary btn-sm" onClick={cancelarEdicion}>
+                          Cancelar
+                        </button>
                       </td>
                     </>
                   ) : (
@@ -180,8 +162,12 @@ const HistorialMovimientos = () => {
                       <td>{mov.beneficiario || '-'}</td>
                       <td>{mov.numero_cheque || '-'}</td>
                       <td>
-                        <button className="btn btn-warning btn-sm me-1" onClick={() => activarEdicion(mov)}>Editar</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => eliminarMovimiento(mov)}>Eliminar</button>
+                        <button className="btn btn-warning btn-sm me-1" onClick={() => activarEdicion(mov)}>
+                          Editar
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => eliminarMovimiento(mov)}>
+                          Eliminar
+                        </button>
                       </td>
                     </>
                   )}

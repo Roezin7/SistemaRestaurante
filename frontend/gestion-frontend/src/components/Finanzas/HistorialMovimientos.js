@@ -32,14 +32,18 @@ const HistorialMovimientos = () => {
   const eliminarMovimiento = async (mov) => {
     if (window.confirm('¿Estás seguro de eliminar este movimiento?')) {
       try {
-        const tabla = mov.tipo === 'Ingreso' ? 'ingresos' : 'egresos';
-        await axios.delete(`/finanzas/${tabla}/${mov.id}`);
-        setMovimientos(prev => prev.filter(m => m.id !== mov.id));
+        const tabla = mov.tipo.toLowerCase() === 'ingreso' ? 'ingresos' : 'egresos';
+        const id = mov.tipo.toLowerCase() === 'ingreso' ? mov.ingreso_id : mov.egreso_id;
+        await axios.delete(`/finanzas/${tabla}/${id}`);
+        setMovimientos(prev => prev.filter(m => {
+          const mid = m.tipo.toLowerCase() === 'ingreso' ? m.ingreso_id : m.egreso_id;
+          return mid !== id;
+        }));
       } catch (error) {
         console.error('❌ Error al eliminar movimiento:', error);
       }
     }
-  };
+  };  
 
   const activarEdicion = (mov) => {
     setModoEdicion(mov.id);
